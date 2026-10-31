@@ -440,52 +440,6 @@ Benchmarked on seeded ledger with 5,000+ subscriptions:
 
 ---
 
-## 5–6 Minute Demo Rehearsal Script
-
-When presenting SubSync to the hackathon judges, follow this step-by-step walkthrough:
-
-```markdown
-1. Minute 0:00 - 0:50 | Executive Intelligence & 30-60-90 Day Cash Forecasting
-   - Step 1: Open http://localhost:5173/login and sign in with admin@subsync.in / Admin@12345.
-   - Step 2: On Overview (/app), point out the top-level KPIs: Active Subscriptions, Live MRR, ARR, and Cash Collections.
-   - Step 3: Scroll to 30-60-90 Day Predictive Revenue & Cash Forecast. Explain the financial distinction: Expected Billings reflects contractual recurrence; Expected Cash Collections applies historical collection efficiency factors.
-   - Step 4: Press [Ctrl+J] to trigger the SubSync AI Revenue Intelligence Copilot. Click "Audit Revenue Leakage" to run an instant financial sanity check across all active contracts and overdue invoices.
-
-2. Minute 0:50 - 1:45 | Customer Onboarding & Intelligent Quotation
-   - Step 1: Log out or switch to Operations Staff (staff@subsync.in / Staff@12345).
-   - Step 2: Navigate to Customers (/app/customers). Click "New Customer". Enter Name: "Zenith Tech", State: "Kerala", and GSTIN. Show how Kerala triggers intra-state CGST (9%) + SGST (9%).
-   - Step 3: Navigate to Quotations (/app/quotations). Click "New Quotation". Select Customer "Zenith Tech", Plan "Security Cloud Monthly", and Qty: 2 seats.
-   - Step 4: Show auto-populated lines and payment terms. Click "Send Quotation" to advance state from DRAFT to QUOTATION with valid_until tracking.
-
-3. Minute 1:45 - 2:40 | Subscription Lifecycle FSM & Operational Control
-   - Step 1: Click "Confirm" to lock quotation terms into a confirmed order.
-   - Step 2: Click "Activate" to initiate the active contract. Note that next_billing_date is anchored to today.
-   - Step 3: Demonstrate state resilience: Click "Pause Subscription" to show status PAUSED (invoicing halted without inflating churn). Click "Resume Subscription" to return to ACTIVE.
-   - Step 4: Scroll down to Audit History to show chronological audit log entries recording actor, action, and timestamps.
-
-4. Minute 2:40 - 3:35 | Automated Billing Engine & Idempotency Guarantee
-   - Step 1: Click Billing in the sidebar (/app/billing).
-   - Step 2: Click "Run Billing Now" (or run python manage.py run_billing in terminal).
-   - Step 3: Show execution completion in ~95ms. Point out the newly generated invoice in DRAFT state.
-   - Step 4: Click "Run Billing Now" a second time immediately to prove IDEMPOTENCY: 0 new invoices created, 0 duplicates skipped. Mention the UniqueConstraint(subscription, period_start) database rule.
-   - Step 5: Click "Time Travel Sandbox" button. Fast-forward +30 days to preview projected billings and auto-close dates.
-
-5. Minute 3:35 - 4:40 | Batch Confirmation & Dynamic Bharat UPI Settlement
-   - Step 1: Navigate to Invoices (/app/invoices).
-   - Step 2: Click "Confirm All Drafts" to assign official, sequential numbers (INV/2026/XXXXX).
-   - Step 3: Click on the newly confirmed invoice. Point out the immutable tax invoice snapshot with CGST and SGST itemization.
-   - Step 4: Click "UPI QR / Collect". Show the vector NPCI UPI QR code generated mathematically in-browser.
-   - Step 5: Click "Instant Settle" (simulating GPay / PhonePe settlement). Watch status transition to PAID with a gap-free reconciliation voucher.
-
-6. Minute 4:40 - 5:30 | Customer Self-Service Portal & Evaluator Conclusion
-   - Step 1: Log out and sign in as customer@subsync.in / Customer@123.
-   - Step 2: Demonstrate tenant isolation: customer sees only their contracts and invoices (zero access to internal pricing or peer data).
-   - Step 3: Click "Download Tax Invoice" for instant printable PDF.
-   - Step 4: Conclude with architecture highlights: Python/Django + React stack, integer-paise financial precision, zero double-billing guarantee, and 15/15 automated test coverage.
-```
-
----
-
 ## Backup Demo Plan & Fallback Modes
 
 To guarantee a flawless presentation under unpredictable hackathon venue conditions (e.g., WiFi drops, projector lag):
