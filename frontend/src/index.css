@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  body { @apply bg-canvas text-charcoal font-sans antialiased; font-size: 14px; }
+  body { @apply bg-[#f5f2fb] text-slate-800 font-sans antialiased; font-size: 14px; }
   .tnum, td, .num { font-feature-settings: 'tnum' 1; }
 }
 
@@ -33,6 +33,15 @@
   .tbl .r { @apply text-right whitespace-nowrap; }
 
   .micro { @apply text-label uppercase text-muted; }
+}
+
+/* Custom Shadows & Sidebar Glows */
+.custom-shadow-card {
+  box-shadow: 0 4px 20px -2px rgba(99, 58, 140, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar-bg-glow {
+  background: radial-gradient(circle at 100% 85%, rgba(186, 45, 145, 0.28) 0%, rgba(93, 16, 73, 0.1) 45%, transparent 75%);
 }
 
 /* Slanted 3D Dashboard Mockup Card */
