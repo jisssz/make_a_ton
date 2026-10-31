@@ -550,47 +550,131 @@ export default function Dashboard() {
 
           {/* Leakage Checklist Breakdown */}
           <div className="mt-3 divide-y divide-slate-100 text-xs">
-            <div className="py-2.5 flex items-center justify-between">
-              <div>
-                <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions with missed billing</h5>
-                <Link to="/app/billing" className="text-[10px] text-slate-400 hover:text-purple-600">Run billing</Link>
-              </div>
-              <span className="font-bold text-emerald-600 text-xs">₹0</span>
-            </div>
-            <div className="py-2.5 flex items-center justify-between">
-              <div>
-                <h5 className="font-semibold text-slate-800 text-[11px]">Duplicate invoices for the same period</h5>
-                <p className="text-[10px] text-slate-400">Protected by unique period rule</p>
-              </div>
-              <span className="font-bold text-emerald-600 text-xs">₹0</span>
-            </div>
-            <div className="py-2.5 flex items-center justify-between">
-              <div>
-                <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions billing ₹0</h5>
-                <Link to="/app/subscriptions?state=ACTIVE" className="text-[10px] text-slate-400 hover:text-purple-600">Review limits</Link>
-              </div>
-              <span className="font-bold text-emerald-600 text-xs">₹0</span>
-            </div>
-            <div className="py-2.5 flex items-center justify-between">
-              <div>
-                <h5 className="font-semibold text-slate-800 text-[11px]">Expired discounts still switched on</h5>
-                <Link to="/app/catalog?tab=discounts" className="text-[10px] text-slate-400 hover:text-purple-600">Turn off</Link>
-              </div>
-              <span className="font-bold text-emerald-600 text-xs">₹0</span>
-            </div>
-            <div className="py-2.5 flex items-center justify-between">
-              <div>
-                <h5 className="font-semibold text-slate-800 text-[11px]">Invoices overdue for more than 60 days</h5>
-                <Link to="/app/invoices?filter=overdue" className="text-[10px] text-slate-400 hover:text-purple-600">Chase payment</Link>
-              </div>
-              <span className="font-bold text-rose-600 text-xs">
-                {leakage?.items?.find((i) => i.key === 'old')?.value ? inr0(leakage.items.find((i) => i.key === 'old').value) : '₹3,11,313'}
-              </span>
-            </div>
+            {leakage?.items?.length ? (
+              leakage.items.map((item, idx) => (
+                <div key={item.key || item.id || idx} className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">{item.title || item.label}</h5>
+                    {item.to ? (
+                      <Link to={item.to} className="text-[10px] text-purple-600 hover:underline">
+                        {item.detail || item.fix}
+                      </Link>
+                    ) : (
+                      <p className="text-[10px] text-slate-400">{item.detail || item.fix}</p>
+                    )}
+                  </div>
+                  <span className={`font-bold text-xs ${item.value > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    {inr0(item.value)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions with missed billing</h5>
+                    <Link to="/app/billing" className="text-[10px] text-slate-400 hover:text-purple-600">Run billing</Link>
+                  </div>
+                  <span className="font-bold text-emerald-600 text-xs">₹0</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">Duplicate invoices for the same period</h5>
+                    <p className="text-[10px] text-slate-400">Protected by unique period rule</p>
+                  </div>
+                  <span className="font-bold text-emerald-600 text-xs">₹0</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions billing ₹0</h5>
+                    <Link to="/app/subscriptions?state=ACTIVE" className="text-[10px] text-slate-400 hover:text-purple-600">Review limits</Link>
+                  </div>
+                  <span className="font-bold text-emerald-600 text-xs">₹0</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">Expired discounts still switched on</h5>
+                    <Link to="/app/catalog?tab=discounts" className="text-[10px] text-slate-400 hover:text-purple-600">Turn off</Link>
+                  </div>
+                  <span className="font-bold text-emerald-600 text-xs">₹0</span>
+                </div>
+                <div className="py-2.5 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-semibold text-slate-800 text-[11px]">Invoices overdue for more than 60 days</h5>
+                    <Link to="/app/invoices?filter=overdue" className="text-[10px] text-slate-400 hover:text-purple-600">Chase payment</Link>
+                  </div>
+                  <span className="font-bold text-rose-600 text-xs">
+                    {leakage?.atRisk ? inr0(leakage.atRisk) : '₹3,11,313'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </section>
       </div>
       {/* END: BottomSplitGrid */}
+
+      {/* BEGIN: PredictiveRevenueForecasting */}
+      {data?.forecast && (
+        <section className="bg-white rounded-2xl border border-card-border custom-shadow-card p-5 mt-5" data-purpose="predictive-revenue-forecasting">
+          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-teal-50 text-teal-700 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h2 className="text-base font-bold text-slate-900">Predictive Revenue &amp; Cash Forecasting</h2>
+            </div>
+            <span className="text-xs font-medium text-slate-500">
+              Historical Collection Efficiency:{' '}
+              <strong className="text-emerald-600 font-bold">
+                {data.forecast.historical_collection_rate_pct}%
+              </strong>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['30_days', '60_days', '90_days'].map((key) => {
+              const proj = data.forecast.projections?.[key];
+              if (!proj) return null;
+              return (
+                <div key={key} className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{proj.label}</span>
+                      <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mb-3">
+                      Contractual Expected Billings:
+                      <div className="text-lg font-extrabold text-[#714B67] num">
+                        {inr0(proj.expected_billings)}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mb-3">
+                      Projected Cash Collections:
+                      <div className="text-base font-bold text-emerald-600 num">
+                        {inr0(proj.expected_cash_collection)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-200/70 pt-2 text-[11px] text-slate-500 flex justify-between">
+                    <span>{proj.upcoming_invoices_count} billing cycles</span>
+                    {proj.at_risk_amount > 0 ? (
+                      <span className="text-amber-600 font-semibold">{inr0(proj.at_risk_amount)} at risk</span>
+                    ) : (
+                      <span className="text-emerald-600 font-semibold">Low risk</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+      {/* END: PredictiveRevenueForecasting */}
     </div>
   );
 }
