@@ -15,13 +15,9 @@ export default {
         ok: { DEFAULT: '#16845B', bg: '#EBF5F1' },
         warn: { DEFAULT: '#D69A35', bg: '#FCF6EA' },
         bad: { DEFAULT: '#C75C55', bg: '#FAF0EF' },
-        sidebar: '#180d1e',
-        'sidebar-hover': '#2a1835',
-        'subtle-bg': '#f8f7fc',
-        'card-border': '#eeeaf6',
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
         hand: ['Kalam', 'cursive'],
       },
       boxShadow: {

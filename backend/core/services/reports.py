@@ -21,16 +21,9 @@ BILLED = (Invoice.CONFIRMED, Invoice.PARTIAL, Invoice.PAID)
 def mrr_map(subs):
     """{subscription_id: monthly recurring value} for the given rows (dicts with id, qty, plan__price, plan__period)."""
     ids = [s['id'] for s in subs]
-    extra = {}
-    for i in range(0, len(ids), 1000):  # batched: databases cap the size of IN (...) lists
-        extra.update(SubscriptionLine.objects.filter(subscription_id__in=ids[i:i + 1000]).values('subscription_id')
-                     .annotate(v=Sum(F('unit_price') * F('qty'))).values_list('subscription_id', 'v'))
+    extra = dict(SubscriptionLine.objects.filter(subscription_id__in=ids).values('subscription_id')
+                 .annotate(v=Sum(F('unit_price') * F('qty'))).values_list('subscription_id', 'v'))
     return {s['id']: round((s['plan__price'] * s['qty'] + (extra.get(s['id']) or 0)) * MONTHLY_FACTOR[s['plan__period']]) for s in subs}
-
-
-def rows_of(subs):
-    """Subscription objects (with plan loaded) -> rows for mrr_map, without an extra IN (...) query."""
-    return [{'id': s.id, 'qty': s.qty, 'customer_id': s.customer_id, 'plan__price': s.plan.price, 'plan__period': s.plan.period} for s in subs]
 
 
 SUB_FIELDS = ('id', 'state', 'qty', 'plan_id', 'customer_id', 'plan__price', 'plan__period', 'activated_on', 'closed_on', 'paused_on')
@@ -123,7 +116,7 @@ def control_centre():
     drafts = Invoice.objects.filter(state=Invoice.DRAFT).aggregate(n=Count('id'), v=Sum('total'))
     overdue = Invoice.objects.filter(state__in=OPEN, due_date__lt=on).exclude(total=F('amount_paid'))
     due = due_subscriptions(on)
-    due_values = mrr_map(rows_of(due))
+    due_values = mrr_map(list(Subscription.objects.filter(id__in=[s.id for s in due]).values(*SUB_FIELDS)))
     discounts = [S.discount(d) for d in Discount.objects.filter(active=True) if
                  (in30 >= d.end_date >= on) or (d.usage_limit and d.usage_limit - d.times_used <= max(5, d.usage_limit * 0.1))]
     return {
@@ -139,7 +132,7 @@ def control_centre():
 def leakage():
     on = today()
     missed = [s for s in due_subscriptions(on) if s.next_billing_date < on]
-    missed_value = sum(mrr_map(rows_of(missed)).values())
+    missed_value = sum(mrr_map(list(Subscription.objects.filter(id__in=[s.id for s in missed]).values(*SUB_FIELDS))).values())
     active = list(Subscription.objects.filter(state=Subscription.ACTIVE).values(*SUB_FIELDS))
     zero = sum(1 for v in mrr_map(active).values() if v == 0)
     duplicates = (Invoice.objects.exclude(state=Invoice.CANCELLED).values('subscription_id', 'period_start')
@@ -157,132 +150,11 @@ def leakage():
     return {'items': items, 'atRisk': missed_value + old_v}
 
 
-def forecast(on=None):
-    from .dates import next_period_start
-    on = on or today()
-    h30_end = on + timedelta(days=30)
-    h60_end = on + timedelta(days=60)
-    h90_end = on + timedelta(days=90)
-
-    # 1. Historical Collection Efficiency
-    inv_qs = Invoice.objects.filter(state__in=BILLED)
-    total_billed = inv_qs.aggregate(s=Sum('total'))['s'] or 0
-    total_collected = Payment.objects.aggregate(s=Sum('amount'))['s'] or 0
-
-    if total_billed > 0:
-        collection_rate = max(0.0, min(1.0, total_collected / total_billed))
-        collection_rate_pct = round(collection_rate * 100, 2)
-    else:
-        collection_rate = 0.85
-        collection_rate_pct = 85.0
-
-    horizons = {
-        '30_days': {
-            'label': 'Next 30 Days (1 Month)',
-            'days': 30,
-            'start_date': on.isoformat(),
-            'end_date': h30_end.isoformat(),
-            'expected_billings': 0,
-            'expected_cash_collection': 0,
-            'at_risk_amount': 0,
-            'upcoming_invoices_count': 0,
-            'expiring_contracts_count': 0,
-            'sample_subscriptions': [],
-        },
-        '60_days': {
-            'label': 'Next 60 Days (2 Months)',
-            'days': 60,
-            'start_date': (h30_end + timedelta(days=1)).isoformat(),
-            'end_date': h60_end.isoformat(),
-            'expected_billings': 0,
-            'expected_cash_collection': 0,
-            'at_risk_amount': 0,
-            'upcoming_invoices_count': 0,
-            'expiring_contracts_count': 0,
-            'sample_subscriptions': [],
-        },
-        '90_days': {
-            'label': 'Next 90 Days (Quarterly)',
-            'days': 90,
-            'start_date': (h60_end + timedelta(days=1)).isoformat(),
-            'end_date': h90_end.isoformat(),
-            'expected_billings': 0,
-            'expected_cash_collection': 0,
-            'at_risk_amount': 0,
-            'upcoming_invoices_count': 0,
-            'expiring_contracts_count': 0,
-            'sample_subscriptions': [],
-        },
-    }
-
-    active_subs = list(Subscription.objects.filter(state=Subscription.ACTIVE).select_related('customer', 'plan').prefetch_related('lines'))
-    mrr_values = mrr_map(rows_of(active_subs))
-
-    for sub in active_subs:
-        mrr = mrr_values.get(sub.id, 0)
-        sub_cycle_price = sub.plan.price * sub.qty + sum(line.unit_price * line.qty for line in sub.lines.all())
-
-        if sub.expiry_date and on <= sub.expiry_date <= h90_end:
-            if sub.expiry_date <= h30_end:
-                k = '30_days'
-            elif sub.expiry_date <= h60_end:
-                k = '60_days'
-            else:
-                k = '90_days'
-            horizons[k]['at_risk_amount'] += mrr
-            horizons[k]['expiring_contracts_count'] += 1
-
-        cycle_date = sub.next_billing_date
-        while cycle_date < on:
-            cycle_date = next_period_start(cycle_date, sub.plan.period, sub.anchor_day)
-
-        while cycle_date <= h90_end:
-            if sub.expiry_date and cycle_date > sub.expiry_date and not sub.plan.renewable:
-                break
-
-            if on <= cycle_date <= h30_end:
-                k = '30_days'
-            elif h30_end < cycle_date <= h60_end:
-                k = '60_days'
-            elif h60_end < cycle_date <= h90_end:
-                k = '90_days'
-            else:
-                break
-
-            horizons[k]['expected_billings'] += sub_cycle_price
-            horizons[k]['upcoming_invoices_count'] += 1
-
-            if len(horizons[k]['sample_subscriptions']) < 5:
-                horizons[k]['sample_subscriptions'].append({
-                    'subscription_number': sub.number,
-                    'customer_name': sub.customer.name,
-                    'plan_name': sub.plan.name,
-                    'projected_date': cycle_date.isoformat(),
-                    'projected_amount': sub_cycle_price,
-                })
-
-            cycle_date = next_period_start(cycle_date, sub.plan.period, sub.anchor_day)
-
-    for k in ('30_days', '60_days', '90_days'):
-        billings = horizons[k]['expected_billings']
-        projected_cash = round(billings * collection_rate)
-        horizons[k]['expected_cash_collection'] = min(billings, projected_cash)
-
-    return {
-        'forecast_generated_at': on.isoformat(),
-        'historical_collection_rate_pct': collection_rate_pct,
-        'total_historical_billed': total_billed,
-        'total_historical_collected': total_collected,
-        'active_subscriptions_modeled': len(active_subs),
-        'projections': horizons,
-    }
-
-
 def dashboard(date_from=None, date_to=None, plan_id=None):
     t0 = time.perf_counter()
     out = {
         'summary': summary(date_from, date_to, plan_id), 'trends': trends(12), 'aging': aging(), 'leakage': leakage(),
-        'control': control_centre(), 'forecast': forecast(), 'activity': [S.event(e) for e in AuditEvent.objects.all()[:8]],
+        'control': control_centre(), 'activity': [S.event(e) for e in AuditEvent.objects.all()[:8]],
         'planMix': [{'name': p.name, 'count': p.n} for p in RecurringPlan.objects.annotate(n=Count('subscription', filter=Q(subscription__state='ACTIVE')))],
     }
     out['ms'] = int((time.perf_counter() - t0) * 1000)

@@ -104,14 +104,6 @@ export const api = {
         overdueCount: cc.overdue.length,
         discounts: cc.discounts,
       },
-      forecast: {
-        historical_collection_rate_pct: 85.0,
-        projections: {
-          '30_days': { label: 'Next 30 Days (1 Month)', expected_billings: cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000, expected_cash_collection: Math.round((cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000) * 0.85), upcoming_invoices_count: cc.dueToday.length || 5, at_risk_amount: 0 },
-          '60_days': { label: 'Next 60 Days (2 Months)', expected_billings: cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000, expected_cash_collection: Math.round((cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000) * 0.85), upcoming_invoices_count: cc.dueToday.length || 5, at_risk_amount: 0 },
-          '90_days': { label: 'Next 90 Days (Quarterly)', expected_billings: cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000, expected_cash_collection: Math.round((cc.dueToday.reduce((a, s) => a + S.subMRR(s), 0) * 100 || 5000000) * 0.85), upcoming_invoices_count: cc.dueToday.length || 5, at_risk_amount: 0 },
-        }
-      },
       activity: [...S.getDb().audit].sort((a, b) => b.at - a.at).slice(0, 8),
       planMix: S.getDb().plans.map((p) => ({ name: p.name, count: S.getDb().subscriptions.filter((s) => s.planId === p.id && s.state === 'ACTIVE').length })),
     };

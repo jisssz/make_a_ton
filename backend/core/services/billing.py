@@ -9,9 +9,7 @@ Guarantees:
 import time
 from datetime import timedelta
 
-from django.conf import settings
-from django.core.mail import send_mail
-from django.db import IntegrityError, connection, transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.utils import timezone
 
@@ -21,7 +19,6 @@ from .dates import next_period_start, parse, today
 from .pricing import price_subscription
 
 MAX_PERIODS_PER_RUN = 800  # guard for daily plans that were left unbilled for years
-LOCK_OPTS = {'skip_locked': True} if connection.features.has_select_for_update_skip_locked else {}
 
 
 def audit(entity, entity_id, action, detail='', actor=None):
@@ -87,11 +84,6 @@ def bill_subscription(sub, up_to, discounts=None):
         nxt = next_period_start(start, sub.plan.period, sub.anchor_day)
         try:
             with transaction.atomic():
-                # Claim the row; if another billing worker holds it, leave it to that worker (PostgreSQL).
-                # On SQLite select_for_update is a no-op and the unique constraint still blocks duplicates.
-                locked = Subscription.objects.select_for_update(**LOCK_OPTS).filter(pk=sub.pk, next_billing_date=start).first()
-                if locked is None:
-                    break
                 _create_invoice(sub, start, nxt - timedelta(days=1), lines, discounts)
                 Subscription.objects.filter(pk=sub.pk).update(next_billing_date=nxt)
             created += 1
@@ -131,14 +123,8 @@ def run_billing(actor=None, up_to=None):
 def confirm_invoices(ids, actor):
     require_staff(actor)
     n = 0
-    ids = list(ids)
     with transaction.atomic():
-        # Load in batches (databases cap the size of IN (...) lists), then number in date order
-        drafts = []
-        for i in range(0, len(ids), 1000):
-            drafts += list(Invoice.objects.select_for_update().filter(pk__in=ids[i:i + 1000], state=Invoice.DRAFT))
-        drafts.sort(key=lambda x: (x.invoice_date, x.id))
-        for inv in drafts:
+        for inv in Invoice.objects.select_for_update().filter(pk__in=ids, state=Invoice.DRAFT).order_by('invoice_date', 'id'):
             year = inv.invoice_date.year
             inv.number = f'INV/{year}/{next_number(f"INV{year}"):05d}'
             inv.state = Invoice.CONFIRMED
@@ -173,14 +159,8 @@ def send_invoice(invoice_id, actor):
         raise NotFound('Invoice')
     if inv.state == Invoice.DRAFT:
         confirm_invoices([inv.id], actor)
-    inv.refresh_from_db()
-    send_mail(
-        f'Invoice {inv.number} from {settings.COMPANY["name"]}',
-        f'Hello {inv.customer.name},\n\nYour invoice {inv.number} for {inv.period_start:%d %b %Y} – {inv.period_end:%d %b %Y} '
-        f'is ₹{inv.total / 100:,.2f}, due on {inv.due_date:%d %b %Y}.\n'
-        f'View or download it here: {settings.FRONTEND_URL}/portal/invoices/{inv.id}\n\nThank you,\n{settings.COMPANY["name"]}',
-        settings.DEFAULT_FROM_EMAIL, [inv.customer.email], fail_silently=True)
     Invoice.objects.filter(pk=inv.pk).update(sent_at=timezone.now())
+    # Hook a real email provider here; the PDF comes from the print view.
     audit('invoice', inv.id, 'Sent', f'Emailed to {inv.customer.email}', actor)
     return inv.customer.email
 

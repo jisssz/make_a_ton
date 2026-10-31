@@ -40,11 +40,6 @@ def login(request):
     return Response(session_for(user))
 
 
-@api_view(['GET'])
-def me(request):
-    return Response(S.user(request.user))
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @throttle_classes([AuthThrottle])

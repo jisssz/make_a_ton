@@ -3,13 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    background-color: #f5f2fb;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #1e293b;
-    -webkit-font-smoothing: antialiased;
-    font-size: 14px;
-  }
+  body { @apply bg-canvas text-charcoal font-sans antialiased; font-size: 14px; }
   .tnum, td, .num { font-feature-settings: 'tnum' 1; }
 }
 
@@ -39,44 +33,6 @@
   .tbl .r { @apply text-right whitespace-nowrap; }
 
   .micro { @apply text-label uppercase text-muted; }
-}
-
-/* Custom Shadows & Sidebar Glows */
-.custom-shadow-card {
-  box-shadow: 0 4px 20px -2px rgba(99, 58, 140, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-}
-
-.sidebar-bg-glow {
-  background-color: #1a0f21 !important;
-  background-image: radial-gradient(circle at 100% 85%, rgba(186, 45, 145, 0.28) 0%, rgba(93, 16, 73, 0.1) 45%, transparent 75%) !important;
-}
-
-/* Slanted 3D Dashboard Mockup Card */
-.dashboard-perspective-container {
-  perspective: 1200px;
-}
-
-.mockup-3d-card {
-  transform: rotateY(-7deg) rotateX(7deg) rotateZ(-1.5deg);
-  box-shadow: 
-    0 25px 50px -12px rgba(18, 4, 30, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-.mockup-3d-card:hover {
-  transform: rotateY(-3deg) rotateX(4deg) rotateZ(-0.5deg);
-}
-
-/* Highlight yellow marker badge */
-.yellow-highlight {
-  background-color: #FACC15;
-  color: #1E1B4B;
-  border-radius: 12px;
-  padding: 2px 18px 6px;
-  display: inline-block;
-  line-height: 1.15;
 }
 
 /* Landing page marker effects (from reference design) */

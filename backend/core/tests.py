@@ -1,7 +1,6 @@
 """python manage.py test core — checks the billing guarantees and access rules."""
 from datetime import date, timedelta
 
-from django.core import mail
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -103,46 +102,3 @@ class ApiAccessTests(Base):
         c = self.client_for('s@x.in', 'Staff@12345')
         self.assertEqual(c.post('/api/discounts/', {'name': 'x'}, format='json').status_code, 403)
         self.assertEqual(c.post('/api/users/', {}, format='json').status_code, 403)
-
-
-class EmailAndProfileTests(ApiAccessTests):
-    def test_me_and_password_reset_email(self):
-        c = self.client_for('s@x.in', 'Staff@12345')
-        self.assertEqual(c.get('/api/auth/me/').json()['role'], 'STAFF')
-        APIClient().post('/api/auth/forgot/', {'email': 's@x.in'}, format='json')
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn('/reset-password/', mail.outbox[0].body)
-
-    def test_send_invoice_emails_customer(self):
-        self.sub()
-        run_billing(self.staff)
-        inv = Invoice.objects.first()
-        c = self.client_for('s@x.in', 'Staff@12345')
-        self.assertEqual(c.post(f'/api/invoices/{inv.id}/send/').status_code, 200)
-        inv.refresh_from_db()
-        self.assertEqual(inv.state, 'CONFIRMED')
-        self.assertTrue(inv.number.startswith('INV/'))
-        self.assertEqual(mail.outbox[-1].to, ['k@x.in'])
-
-
-class ForecastingTests(Base):
-    def test_forecast_projections_and_cash_caps(self):
-        from .services.reports import forecast
-        self.sub(start=today() + timedelta(days=10))
-        fc = forecast()
-        self.assertIn('projections', fc)
-        self.assertIn('30_days', fc['projections'])
-        self.assertIn('60_days', fc['projections'])
-        self.assertIn('90_days', fc['projections'])
-        
-        p30 = fc['projections']['30_days']
-        p60 = fc['projections']['60_days']
-        p90 = fc['projections']['90_days']
-
-        self.assertGreater(p30['expected_billings'], 0)
-        self.assertGreater(p60['expected_billings'], 0)
-        self.assertGreater(p90['expected_billings'], 0)
-        
-        self.assertLessEqual(p30['expected_cash_collection'], p30['expected_billings'])
-        self.assertLessEqual(p60['expected_cash_collection'], p60['expected_billings'])
-        self.assertLessEqual(p90['expected_cash_collection'], p90['expected_billings'])

@@ -5,7 +5,6 @@ from .views import auth, billing, catalog, subscriptions
 urlpatterns = [
     # auth
     path('auth/login/', auth.login),
-    path('auth/me/', auth.me),
     path('auth/signup/', auth.signup),
     path('auth/forgot/', auth.forgot),
     path('auth/reset/', auth.reset),
