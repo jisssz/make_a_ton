@@ -123,3 +123,26 @@ class EmailAndProfileTests(ApiAccessTests):
         self.assertEqual(inv.state, 'CONFIRMED')
         self.assertTrue(inv.number.startswith('INV/'))
         self.assertEqual(mail.outbox[-1].to, ['k@x.in'])
+
+
+class ForecastingTests(Base):
+    def test_forecast_projections_and_cash_caps(self):
+        from .services.reports import forecast
+        self.sub(start=today() + timedelta(days=10))
+        fc = forecast()
+        self.assertIn('projections', fc)
+        self.assertIn('30_days', fc['projections'])
+        self.assertIn('60_days', fc['projections'])
+        self.assertIn('90_days', fc['projections'])
+        
+        p30 = fc['projections']['30_days']
+        p60 = fc['projections']['60_days']
+        p90 = fc['projections']['90_days']
+
+        self.assertGreater(p30['expected_billings'], 0)
+        self.assertGreater(p60['expected_billings'], 0)
+        self.assertGreater(p90['expected_billings'], 0)
+        
+        self.assertLessEqual(p30['expected_cash_collection'], p30['expected_billings'])
+        self.assertLessEqual(p60['expected_cash_collection'], p60['expected_billings'])
+        self.assertLessEqual(p90['expected_cash_collection'], p90['expected_billings'])

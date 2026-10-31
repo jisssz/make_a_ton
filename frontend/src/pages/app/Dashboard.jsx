@@ -129,6 +129,59 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* 30-60-90 Day Predictive Revenue Forecasting */}
+      {data.forecast && (
+        <Card
+          title="Predictive Revenue & Cash Forecasting"
+          className="mb-4"
+          action={
+            <span className="text-[12px] text-muted">
+              Historical Collection Efficiency:{' '}
+              <strong className="text-ok font-semibold">
+                {data.forecast.historical_collection_rate_pct}%
+              </strong>
+            </span>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['30_days', '60_days', '90_days'].map((key) => {
+              const proj = data.forecast.projections?.[key];
+              if (!proj) return null;
+              return (
+                <div key={key} className="bg-canvas border border-line rounded-lg p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[12px] font-semibold text-muted uppercase tracking-wider">{proj.label}</span>
+                      <TrendingUp size={15} className="text-teal" />
+                    </div>
+                    <div className="text-[11px] text-muted mb-3">
+                      Contractual Expected Billings:
+                      <div className="text-[18px] font-bold text-plum num">
+                        {inr0(proj.expected_billings)}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-muted mb-3">
+                      Projected Cash Collections:
+                      <div className="text-[16px] font-bold text-ok num">
+                        {inr0(proj.expected_cash_collection)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border-t border-line pt-2 text-[11px] text-muted flex justify-between">
+                    <span>{proj.upcoming_invoices_count} billing cycles</span>
+                    {proj.at_risk_amount > 0 ? (
+                      <span className="text-warn font-medium">{inr0(proj.at_risk_amount)} at risk</span>
+                    ) : (
+                      <span className="text-ok font-medium">0 expiring</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
         <Card title="MRR trend" action={<span className="text-[12px] text-muted">Last 12 months</span>}>
           <div className="h-64">
