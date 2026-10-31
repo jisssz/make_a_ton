@@ -345,6 +345,8 @@ All API endpoints are prefixed with `/api/`, expect `Authorization: Bearer <toke
 | **Reports** | `/reports/dashboard/` | `GET` | Admin/Staff | Complete KPIs, MRR, aging, leakage checks, and 30-60-90d forecast |
 | **Users** | `/users/` | `GET, POST` | Admin | Manage internal staff and administrator accounts |
 
+> For comprehensive request/response payloads, field validations, and error schemas, see the complete [REST API Specification](docs/api-specification.md) and [Implementation Status Matrix](docs/implementation-status.md).
+
 ---
 
 ## Local Setup & Quick Start
