@@ -21,7 +21,7 @@ export default {
         'card-border': '#eeeaf6',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
         hand: ['Kalam', 'cursive'],
       },
       boxShadow: {

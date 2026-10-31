@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, Repeat, FileText, Receipt, CreditCard, Package, UserPlus, Settings, Search,
-  LogOut, Menu, Zap, Calendar, Sparkles, Clock, Crown, Building2, ChevronDown, Bell
+  Home, Users, Repeat, FileText, Receipt, CreditCard, Package, UserPlus, Settings, Search,
+  LogOut, Menu, Zap, Calendar, Sparkles, Clock, Crown, Building2, ChevronDown, Bell, ArrowRight,
 } from 'lucide-react';
 import { Badge } from './ui';
 import { useAuth } from '../lib/hooks';
@@ -14,7 +14,7 @@ import { TimeTravelModal } from './TimeTravelModal';
 
 const NAV = [
   { group: 'Operations', items: [
-    { to: '/app', end: true, label: 'Overview', icon: LayoutDashboard },
+    { to: '/app', end: true, label: 'Overview', icon: Home },
     { to: '/app/customers', label: 'Customers', icon: Users },
     { to: '/app/quotations', label: 'Quotations', icon: FileText },
     { to: '/app/subscriptions', label: 'Subscriptions', icon: Repeat },
@@ -203,19 +203,21 @@ export default function AppShell() {
       <div className="p-4 mt-auto">
         <div className="bg-gradient-to-br from-[#3b1a47]/90 to-[#23122c]/90 border border-white/10 rounded-2xl p-3.5 backdrop-blur-md relative overflow-hidden">
           <div className="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-300/30 flex items-center justify-center text-amber-300 mb-2.5">
-            <Crown size={15} className="fill-current" />
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+            </svg>
           </div>
-          <h4 className="text-white text-sm font-semibold mb-1">SubSync Enterprise</h4>
+          <h4 className="text-white text-sm font-semibold mb-1">Upgrade to Pro</h4>
           <p className="text-slate-300/80 text-[11px] leading-relaxed mb-3">
-            AI Copilot, Bharat UPI &amp; Real-time Forecasting Active.
+            Unlock advanced analytics, automations and priority support.
           </p>
           <button
             type="button"
             onClick={() => setCopilotOpen(true)}
             className="w-full bg-white text-slate-900 hover:bg-slate-100 py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
           >
-            <span>Launch AI Copilot</span>
-            <Sparkles size={13} className="text-purple-600" />
+            <span>Upgrade plan</span>
+            <ArrowRight size={14} className="stroke-[2.2]" />
           </button>
         </div>
 
@@ -223,7 +225,7 @@ export default function AppShell() {
           <Building2 size={16} className="text-slate-400/80" />
           <div className="truncate">
             <span className="font-medium text-slate-200">Brightloop Software</span>
-            <span className="text-[10px] text-slate-400 block -mt-0.5">GSTIN 32ABCDE1234F1Z5 · v2.4.0</span>
+            <span className="text-[10px] text-slate-400 block -mt-0.5">v2.4.0</span>
           </div>
         </div>
       </div>

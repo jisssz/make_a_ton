@@ -3,7 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  body { @apply bg-[#f5f2fb] text-slate-800 font-sans antialiased; font-size: 14px; }
+  body {
+    background-color: #f5f2fb;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+  }
   .tnum, td, .num { font-feature-settings: 'tnum' 1; }
 }
 
