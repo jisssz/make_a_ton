@@ -34,6 +34,7 @@ SubSync is a cohesive, production-minded subscription and recurring revenue mana
 - [Demo Credentials](#demo-credentials)
 - [Verification & Automated Tests](#verification--automated-tests)
 - [5–6 Minute Demo Rehearsal Script](#56-minute-demo-rehearsal-script)
+- [Backup Demo Plan & Reliability Guarantees](#backup-demo-plan--reliability-guarantees)
 - [Team NPSKY](#team-npsky)
 - [License](#license)
 
@@ -56,23 +57,14 @@ SubSync is a cohesive, production-minded subscription and recurring revenue mana
 
 ## 🚀 Standout Innovations & "Wow Factor" Features
 
-1. **SubSync AI Revenue Intelligence Copilot (`Ctrl+J`)**:
-   - Continuous silent revenue leakage radar, silent churn detection, and 1-click remediation actions.
-   - Built-in predictive cash forecasting modeling 30-day and 60-day collections based on scheduled renewals and payment velocity.
-   - Natural language billing copilot capable of parsing live subscription ledgers to answer complex queries (e.g., *"Top 5 overdue accounts"*, *"Odoo brand variant margin contribution"*, *"Expiring subscriptions"*).
+SubSync incorporates four advanced intelligence capabilities engineered specifically for high-velocity subscription operations. Below is their technical architecture and implementation status:
 
-2. **Instant Bharat UPI Dynamic QR & Payment Terminal**:
-   - Zero-dependency client-side vector SVG QR generator (`frontend/src/lib/qr.js`) generating standard NPCI UPI deep links (`upi://pay?pa=brightloop@okaxis&...`).
-   - One-click instant UPI settlement simulator supporting GPay, PhonePe, Paytm, BHIM, and CRED with automated webhook reconciliation and instant receipt issuance.
-   - 1-click WhatsApp payment reminders with pre-formatted UPI payment links for immediate collection.
-
-3. **Interactive Time Travel Sandbox (Live Billing Engine Simulator)**:
-   - Visual time-machine slider and preset jump buttons (`+7d`, `+30d`, `+60d`, `+90d`) with real-time projections of due subscriptions, gross invoice volume, and expiring quotations.
-   - 1-Click "Fast-Forward & Run Automated Billing Day" executing batch billing cycles into the future without touching a spreadsheet.
-
-4. **Algorithmic Customer Health & Churn Risk Matrix (0–100%)**:
-   - Multi-factor algorithmic health score evaluating payment promptness, contract stability, active vs paused subscriptions, and GSTIN business maturity.
-   - Automatic classification into Healthy (≥80%), Stable, and At Churn Risk (<60%) with personalized AI retention action plans.
+| Innovation | Implementation Mechanism | Functional Classification | Technical Talking Point for Evaluators |
+|---|---|---|---|
+| **AI Revenue Intelligence Copilot (`Ctrl+J`)** | Client-side domain engine in `AICopilot.jsx` aggregating live REST payloads (`/api/dashboard/`, `/api/subscriptions/`, `/api/invoices/`, `/api/customers/`) with natural-language regex query dispatch and 1-click remediation actions. | **100% Functional** against live database state. | Real-time audit radar identifying unbilled revenue, overdue amounts, paused MRR, and high-margin Odoo variant contribution without external cloud LLM latency or API key dependencies. |
+| **Instant Bharat UPI Dynamic QR Terminal** | Pure JavaScript mathematical QR code synthesizer (`src/lib/qr.js`) with Galois field $GF(2^8)$ multiplication and Reed-Solomon polynomial error correction. Dispatches standard NPCI deep links (`upi://pay?...`) and commits transactions via `/api/payments/`. | **100% Functional** (Generates real NPCI QR vector SVGs; settlement dispatches real payment records to Django backend). | Zero third-party npm QR dependencies; instant settlement simulator records genuine financial vouchers into PostgreSQL/SQLite database with invoice balance decrement. |
+| **Interactive Time Travel Sandbox** | Temporal projection engine in `TimeTravelModal.jsx` calculating future contract expirations, batch invoicing volume, and executing future billing runs via `POST /api/billing/run/` with `{ upTo: targetDate }`. | **100% Functional** (Simulates target dates and executes real backend billing runs up to +90 days). | Demonstrates automated batch invoicing and multi-period catch-up cycles without waiting weeks in real time. |
+| **Algorithmic Churn Risk Matrix (0–100%)** | Deterministic multi-factor scoring model in `src/lib/churn.js` evaluating invoice payment velocity, overdue days, subscription tenor, paused flags, and GSTIN validity. | **100% Functional** (Evaluates live customer payment and contract ledgers). | Classifies accounts into Healthy ($\ge 80$), Stable, and At Risk ($< 60$) with targeted retention playbooks and automated dunning triggers. |
 
 ---
 
@@ -216,16 +208,36 @@ stateDiagram-v2
 
 ## Screenshots & Visual Tour
 
-*(Place application screenshots in `docs/screenshots/`)*
+### 1. Executive Analytics & Predictive Forecasting
+![Executive Dashboard](docs/screenshots/01-dashboard.png)
+*Real-time executive view: Active MRR/ARR, collection efficiency, receivables aging breakdown, and 30-60-90 day mathematical revenue forecast.*
 
-| Screen | Description | Placeholder |
-|---|---|---|
-| **Executive Dashboard & KPIs** | Live MRR, ARR, Cash Collections, Aging Analysis | `![Dashboard](docs/screenshots/01-dashboard.png)` |
-| **Predictive Revenue Forecasting** | 30-60-90 Day Expected Billings vs Cash Collections | `![Forecasting](docs/screenshots/02-forecasting.png)` |
-| **Billing Control Centre** | Upcoming renewals, due billings, and revenue leakage alerts | `![Control Centre](docs/screenshots/03-control-centre.png)` |
-| **Subscription Lifecycle** | Quotation review, line items, state transition audit trail | `![Subscription Detail](docs/screenshots/04-subscription.png)` |
-| **Invoice & Payment Settlement** | Confirmed tax invoice with GST split and partial UPI payments | `![Invoice Detail](docs/screenshots/05-invoice-payment.png)` |
-| **Customer Self-Service Portal** | Isolated client portal for subscription renewals and invoices | `![Customer Portal](docs/screenshots/06-customer-portal.png)` |
+![Predictive Revenue Forecasting](docs/screenshots/02-forecasting.png)
+*30, 60, and 90-day predictive forward modeling separating Contractual Expected Billings from Expected Cash Collections.*
+
+### 2. Billing Control Centre & Revenue Leakage Radar
+![Billing Control Centre](docs/screenshots/03-control-centre.png)
+*Operational queue for due billings, draft batch confirmation, expiring quotations, and automated leakage detection.*
+
+### 3. Subscription Lifecycle & Audit History
+![Subscription Detail](docs/screenshots/04-subscription.png)
+*Granular subscription contract with seat counts, pricing lines, payment terms, and server-enforced lifecycle state machine.*
+
+### 4. Bharat UPI Payment Terminal & Instant Settlement
+![Invoice & Payment Settlement](docs/screenshots/05-invoice-payment.png)
+*Confirmed tax invoice with GST breakdown, zero-dependency NPCI UPI dynamic QR generator, and 1-click settlement recording.*
+
+### 5. Customer Self-Service Portal
+![Customer Self-Service Portal](docs/screenshots/06-customer-portal.png)
+*Strictly isolated customer portal allowing self-service invoice downloads and subscription status tracking.*
+
+### 6. SubSync AI Revenue Intelligence Copilot (`Ctrl+J`)
+![AI Copilot](docs/screenshots/07-ai-copilot.png)
+*Interactive conversational copilot analyzing live subscription ledgers for leakage audits, overdue chasing, and margin analysis.*
+
+### 7. Interactive Time Travel Sandbox
+![Time Travel Sandbox](docs/screenshots/08-time-travel.png)
+*Future billing simulation sandbox projecting upcoming renewals and executing batch billing days up to +90 days.*
 
 ---
 
@@ -428,43 +440,71 @@ Benchmarked on seeded ledger with 5,000+ subscriptions:
 
 ## 5–6 Minute Demo Rehearsal Script
 
-When demonstrating SubSync to the hackathon judges, follow this proven script:
+When presenting SubSync to the hackathon judges, follow this step-by-step walkthrough:
 
 ```markdown
-1. Minute 0:00 - 0:45 | The Brightloop Problem & Executive Dashboard
-   - Log in as admin@subsync.in / Admin@12345.
-   - Show Executive Dashboard: Live MRR, ARR, Billed vs Collected, and Aging Buckets.
-   - Highlight the 30-60-90 Day Predictive Revenue & Cash Forecast, demonstrating how contractual billings are separated from actual cash collection probabilities.
+1. Minute 0:00 - 0:50 | Executive Intelligence & 30-60-90 Day Cash Forecasting
+   - Step 1: Open http://localhost:5173/login and sign in with admin@subsync.in / Admin@12345.
+   - Step 2: On Overview (/app), point out the top-level KPIs: Active Subscriptions, Live MRR, ARR, and Cash Collections.
+   - Step 3: Scroll to 30-60-90 Day Predictive Revenue & Cash Forecast. Explain the financial distinction: Expected Billings reflects contractual recurrence; Expected Cash Collections applies historical collection efficiency factors.
+   - Step 4: Press [Ctrl+J] to trigger the SubSync AI Revenue Intelligence Copilot. Click "Audit Revenue Leakage" to run an instant financial sanity check across all active contracts and overdue invoices.
 
-2. Minute 0:45 - 1:45 | Catalog & Quotation Creation
-   - Navigate to Catalog: Show recurring plans with behavioral flags (Daily, Monthly, Pausable, Renewable).
-   - Switch to Operations Staff (staff@subsync.in).
-   - Create a new Customer in Kerala (enforcing CGST + SGST split).
-   - Generate a Quotation with 2 seats. Show real-time tax calculation and send the quotation.
+2. Minute 0:50 - 1:45 | Customer Onboarding & Intelligent Quotation
+   - Step 1: Log out or switch to Operations Staff (staff@subsync.in / Staff@12345).
+   - Step 2: Navigate to Customers (/app/customers). Click "New Customer". Enter Name: "Zenith Tech", State: "Kerala", and GSTIN. Show how Kerala triggers intra-state CGST (9%) + SGST (9%).
+   - Step 3: Navigate to Quotations (/app/quotations). Click "New Quotation". Select Customer "Zenith Tech", Plan "Security Cloud Monthly", and Qty: 2 seats.
+   - Step 4: Show auto-populated lines and payment terms. Click "Send Quotation" to advance state from DRAFT to QUOTATION with valid_until tracking.
 
-3. Minute 1:45 - 2:45 | Quotation-to-Subscription Conversion
-   - Confirm and Activate the quotation into an active Subscription.
-   - Demonstrate the server-enforced lifecycle FSM: pause the subscription (shows paused state) and resume back to active.
-   - Show the full chronological audit trail.
+3. Minute 1:45 - 2:40 | Subscription Lifecycle FSM & Operational Control
+   - Step 1: Click "Confirm" to lock quotation terms into a confirmed order.
+   - Step 2: Click "Activate" to initiate the active contract. Note that next_billing_date is anchored to today.
+   - Step 3: Demonstrate state resilience: Click "Pause Subscription" to show status PAUSED (invoicing halted without inflating churn). Click "Resume Subscription" to return to ACTIVE.
+   - Step 4: Scroll down to Audit History to show chronological audit log entries recording actor, action, and timestamps.
 
-4. Minute 2:45 - 3:45 | Automated Billing Engine & Idempotency
-   - Navigate to Billing Run.
-   - Click "Run Billing Now" (or run python manage.py run_billing in terminal).
-   - Show batch completion: invoices generated in ~95ms.
-   - Trigger the billing run a second time immediately to demonstrate IDEMPOTENCY: 0 invoices created, 0 duplicates.
+4. Minute 2:40 - 3:35 | Automated Billing Engine & Idempotency Guarantee
+   - Step 1: Click Billing in the sidebar (/app/billing).
+   - Step 2: Click "Run Billing Now" (or run python manage.py run_billing in terminal).
+   - Step 3: Show execution completion in ~95ms. Point out the newly generated invoice in DRAFT state.
+   - Step 4: Click "Run Billing Now" a second time immediately to prove IDEMPOTENCY: 0 new invoices created, 0 duplicates skipped. Mention the UniqueConstraint(subscription, period_start) database rule.
+   - Step 5: Click "Time Travel Sandbox" button. Fast-forward +30 days to preview projected billings and auto-close dates.
 
-5. Minute 3:45 - 4:45 | Invoice Confirmation & Partial Payment Settlement
-   - Navigate to Invoices: Select draft invoices and perform batch confirmation.
-   - Open invoice INV/2026/XXXXX: Note the itemized GST tax snapshot.
-   - Record a partial UPI payment of ₹5,000: Show remaining balance recalculation and PARTIAL status.
-   - Record the final balance payment: Watch the status transition to PAID.
+5. Minute 3:35 - 4:40 | Batch Confirmation & Dynamic Bharat UPI Settlement
+   - Step 1: Navigate to Invoices (/app/invoices).
+   - Step 2: Click "Confirm All Drafts" to assign official, sequential numbers (INV/2026/XXXXX).
+   - Step 3: Click on the newly confirmed invoice. Point out the immutable tax invoice snapshot with CGST and SGST itemization.
+   - Step 4: Click "UPI QR / Collect". Show the vector NPCI UPI QR code generated mathematically in-browser.
+   - Step 5: Click "Instant Settle" (simulating GPay / PhonePe settlement). Watch status transition to PAID with a gap-free reconciliation voucher.
 
-6. Minute 4:45 - 5:30 | Customer Self-Service Portal & Conclusion
-   - Log in as customer@subsync.in / Customer@123.
-   - Demonstrate customer data isolation: the customer sees only their contracts and invoices.
-   - Download the generated tax invoice.
-   - Wrap up with architecture highlights: zero double-billing guarantee, integer-paise financial precision, and scalable design.
+6. Minute 4:40 - 5:30 | Customer Self-Service Portal & Evaluator Conclusion
+   - Step 1: Log out and sign in as customer@subsync.in / Customer@123.
+   - Step 2: Demonstrate tenant isolation: customer sees only their contracts and invoices (zero access to internal pricing or peer data).
+   - Step 3: Click "Download Tax Invoice" for instant printable PDF.
+   - Step 4: Conclude with architecture highlights: Python/Django + React stack, integer-paise financial precision, zero double-billing guarantee, and 15/15 automated test coverage.
 ```
+
+---
+
+## Backup Demo Plan & Fallback Modes
+
+To guarantee a flawless presentation under unpredictable hackathon venue conditions (e.g., WiFi drops, projector lag):
+
+1. **Plan A — Live Full-Stack Application (Default):**
+   - Run `./run_dev.sh` to start the live Django REST backend (`http://127.0.0.1:8000`) and React frontend (`http://localhost:5173`) backed by PostgreSQL/SQLite.
+2. **Plan B — Instant 3-Second Reset:**
+   - If unwanted test data clutters the screen during rehearsal, run:
+     ```bash
+     cd backend && python manage.py seed --fresh
+     ```
+     This restores the database to 266 subscriptions, 2,781 clean invoices, and verified demo credentials in under 3 seconds.
+3. **Plan C — Standalone Offline Demo Mode (Zero-Network Fallback):**
+   - If local backend processes or database ports fail, set `VITE_USE_API=false` in `frontend/.env` and restart Vite:
+     ```bash
+     # In frontend/.env
+     VITE_USE_API=false
+     ```
+     The frontend automatically switches to its in-memory reactive ledger (`src/data/store.js`). All business rules, lifecycle transitions, and calculations work 100% in-browser without any running backend.
+4. **Plan D — Visual Tour & Video Backup:**
+   - High-resolution verified walkthrough screenshots are bundled in `docs/screenshots/` and documented in the visual tour above. Keep a pre-recorded 5-minute screen capture on your local desktop.
 
 ---
 

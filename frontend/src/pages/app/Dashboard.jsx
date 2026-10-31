@@ -160,9 +160,9 @@ export default function Dashboard() {
             <div className="text-[12px] text-muted">Missed billing + invoices more than 60 days overdue</div>
           </div>
           <ul>
-            {leakage.items.map((i) => (
-              <li key={i.id} className="px-4 py-2.5 border-b border-line last:border-0 flex items-center justify-between text-[13px]">
-                <div><div className="font-medium">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></div>
+            {leakage.items.map((i, idx) => (
+              <li key={i.key || i.id || `leakage-${idx}`} className="px-4 py-2.5 border-b border-line last:border-0 flex items-center justify-between text-[13px]">
+                <div><div className="font-medium">{i.title || i.label}</div><div className="text-[12px] text-muted">{i.detail || i.fix}</div></div>
                 <div className="num text-bad font-medium">{inr0(i.value)}</div>
               </li>
             ))}
