@@ -155,7 +155,7 @@ export default function AppShell() {
   }, []);
 
   const sidebar = (
-    <aside className="w-[260px] h-full bg-[#1a0f21] text-slate-300 flex-shrink-0 flex flex-col justify-between relative sidebar-bg-glow border-r border-[#2d1b38] select-none">
+    <aside style={{ backgroundColor: "#1a0f21" }} className="w-[260px] h-full bg-[#1a0f21] text-slate-300 flex-shrink-0 flex flex-col justify-between relative sidebar-bg-glow border-r border-[#2d1b38] select-none">
       <div className="overflow-y-auto">
         {/* Brand Logo */}
         <div className="px-6 py-5 flex items-center gap-2.5">
@@ -235,13 +235,13 @@ export default function AppShell() {
   return (
     <div className="min-h-screen flex bg-[#f5f2fb]">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 z-30 no-print">{sidebar}</div>
+      <div className="hidden lg:block fixed inset-y-0 left-0 z-30 no-print" style={{ backgroundColor: "#1a0f21" }}>{sidebar}</div>
 
       {/* Mobile Drawer */}
       {mobile && (
         <div className="lg:hidden fixed inset-0 z-40 flex no-print">
           <div className="fixed inset-0 bg-charcoal/60 backdrop-blur-xs" onClick={() => setMobile(false)} />
-          <div className="relative z-10">{sidebar}</div>
+          <div className="relative z-10" style={{ backgroundColor: "#1a0f21" }}>{sidebar}</div>
         </div>
       )}
 
