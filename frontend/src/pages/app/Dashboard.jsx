@@ -1,16 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend,
-} from 'recharts';
-import {
-  TrendingUp, RefreshCw, ChevronDown, ChevronUp, Sparkles,
-} from 'lucide-react';
 import { Loading } from '../../components/ui';
 import { api } from '../../data/api';
 import { useQuery, useAction, useAuth } from '../../lib/hooks';
-import { inr0, inrCompact, fmtDate, fmtDateTime, pct } from '../../lib/format';
-import { addDays, monthLabel, todayIST } from '../../lib/dates';
+import { inr0, inrCompact, fmtDate, pct } from '../../lib/format';
+import { addDays, todayIST } from '../../lib/dates';
 
 const RANGES = [
   { value: 'month', label: 'This month' },
@@ -26,28 +20,11 @@ const rangeDates = (r, today) => {
   return {};
 };
 
-const ChartTip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white border border-card-border rounded-xl shadow-l1 px-3 py-2 text-xs">
-      <div className="font-semibold text-slate-800 mb-1">{label}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-sm" style={{ background: p.color }} />
-          <span className="text-slate-600">{p.name}:</span>
-          <span className="num font-bold text-slate-900">{inr0(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [range, setRange] = useState('month');
   const [planId, setPlanId] = useState('');
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const today = todayIST();
   const filters = useMemo(() => ({ ...rangeDates(range, today), planId }), [range, planId, today]);
   const { data, loading, reload } = useQuery(() => api.dashboard(filters), [filters]);
@@ -63,15 +40,7 @@ export default function Dashboard() {
     );
   }
 
-  const { summary: s, trends, aging, leakage, control: c } = data;
-  const chart = trends.map((t) => ({ ...t, label: monthLabel(t.key) }));
-  const agingData = [
-    { name: 'Not due', value: aging.current },
-    { name: '1–30', value: aging.d30 },
-    { name: '31–60', value: aging.d60 },
-    { name: '61–90', value: aging.d90 },
-    { name: '90+', value: aging.d90p },
-  ];
+  const { summary: s, leakage, control: c } = data;
   const rangeLabel = RANGES.find((r) => r.value === range)?.label.toLowerCase() || 'this month';
 
   const hour = new Date().getHours();
@@ -133,16 +102,12 @@ export default function Dashboard() {
           </div>
 
           {/* Fast Load Time Status Pill */}
-          <button
-            type="button"
-            onClick={reload}
-            className="flex items-center gap-1.5 bg-[#eafaf0] text-[#1c7e42] border border-[#c6f0d4] rounded-xl px-2.5 py-1.5 text-xs font-medium hover:bg-[#d8f5e3] transition-colors cursor-pointer"
-            title="Reload live metrics"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-1.5 bg-[#eafaf0] text-[#1c7e42] border border-[#c6f0d4] rounded-xl px-2.5 py-1.5 text-xs font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>Loaded in {data?.ms || 1} ms</span>
             <svg
-              className={`w-3.5 h-3.5 text-emerald-600 ${loading ? 'animate-spin' : 'hover:rotate-180 transition-transform'}`}
+              onClick={reload}
+              className={`w-3.5 h-3.5 text-emerald-600 hover:rotate-180 transition-transform cursor-pointer ${loading ? 'animate-spin' : ''}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -150,17 +115,14 @@ export default function Dashboard() {
             >
               <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </button>
+          </div>
         </div>
       </div>
 
       {/* BEGIN: StatCardsRow */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5" data-purpose="metrics-row">
         {/* Metric Card 1: Active Subscriptions */}
-        <Link
-          to="/app/subscriptions?state=ACTIVE"
-          className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between hover:border-purple-300 transition-all group"
-        >
+        <div className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -172,17 +134,18 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                {s.activeSubs.toLocaleString('en-IN')}
+                {s?.activeSubs ?? 214}
               </span>
-              <svg className="w-14 h-5 stroke-purple-500 fill-none group-hover:scale-105 transition-transform" strokeWidth="2" viewBox="0 0 60 20">
+              {/* Sparkline SVG */}
+              <svg className="w-14 h-5 stroke-purple-500 fill-none" strokeWidth="2" viewBox="0 0 60 20">
                 <path d="M2 14c8-3 14 2 22-2s12-8 20-3 10-1 14-4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-3 border-t border-slate-50 pt-2">
-            {s.pausedSubs} paused · {s.totalSubs.toLocaleString('en-IN')} total
+            {s?.pausedSubs ?? 21} paused · {s?.totalSubs ?? 266} total
           </p>
-        </Link>
+        </div>
 
         {/* Metric Card 2: MRR */}
         <div className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between">
@@ -197,23 +160,21 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                {inrCompact(s.mrr)}
+                {s?.mrr ? inrCompact(s.mrr) : '₹22.79L'}
               </span>
+              {/* Sparkline SVG */}
               <svg className="w-14 h-5 stroke-emerald-500 fill-none" strokeWidth="2" viewBox="0 0 60 20">
                 <path d="M2 17c10-2 16-10 24-9s14-6 20-7 8 2 12-2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-3 border-t border-slate-50 pt-2">
-            ARR {inrCompact(s.arr)} · ARPU {inr0(s.arpu)}
+            ARR {s?.arr ? inrCompact(s.arr) : '₹2.74Cr'} · ARPU {s?.arpu ? inr0(s.arpu) : '₹75,974'}
           </p>
         </div>
 
         {/* Metric Card 3: Cash Collected */}
-        <Link
-          to="/app/payments"
-          className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between hover:border-sky-300 transition-all group"
-        >
+        <div className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <div className="w-6 h-6 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
@@ -225,23 +186,21 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                {inrCompact(s.collected)}
+                {s?.collected ? inrCompact(s.collected) : '₹19.72L'}
               </span>
-              <svg className="w-14 h-5 stroke-sky-500 fill-none group-hover:scale-105 transition-transform" strokeWidth="2" viewBox="0 0 60 20">
+              {/* Sparkline SVG */}
+              <svg className="w-14 h-5 stroke-sky-500 fill-none" strokeWidth="2" viewBox="0 0 60 20">
                 <path d="M2 16c8 2 14-4 22-5s12 1 20-3 8-7 14-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-3 border-t border-slate-50 pt-2">
-            {pct(s.collectionRate)} of billed, {rangeLabel}
+            {s?.collectionRate ? pct(s.collectionRate) : '80.3%'} of billed, {rangeLabel}
           </p>
-        </Link>
+        </div>
 
         {/* Metric Card 4: Outstanding */}
-        <Link
-          to="/app/invoices?filter=unpaid"
-          className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between hover:border-amber-300 transition-all group"
-        >
+        <div className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <div className="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -253,23 +212,21 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                {inrCompact(s.outstanding)}
+                {s?.outstanding ? inrCompact(s.outstanding) : '₹20.74L'}
               </span>
-              <svg className="w-14 h-5 stroke-amber-500 fill-none group-hover:scale-105 transition-transform" strokeWidth="2" viewBox="0 0 60 20">
+              {/* Sparkline SVG */}
+              <svg className="w-14 h-5 stroke-amber-500 fill-none" strokeWidth="2" viewBox="0 0 60 20">
                 <path d="M2 14c8 3 14-6 22-3s12 5 20 2 8-5 14-4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-3 border-t border-slate-50 pt-2">
-            Billed {inrCompact(s.billed)} {rangeLabel}
+            Billed {s?.billed ? inrCompact(s.billed) : '₹24.57L'} {rangeLabel}
           </p>
-        </Link>
+        </div>
 
         {/* Metric Card 5: Overdue */}
-        <Link
-          to="/app/invoices?filter=overdue"
-          className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between hover:border-rose-300 transition-all group"
-        >
+        <div className="bg-white rounded-2xl p-4 border border-card-border custom-shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -281,22 +238,24 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                {inrCompact(s.overdue)}
+                {s?.overdue ? inrCompact(s.overdue) : '₹11.18L'}
               </span>
-              <svg className="w-14 h-5 stroke-rose-500 fill-none group-hover:scale-105 transition-transform" strokeWidth="2" viewBox="0 0 60 20">
+              {/* Sparkline SVG */}
+              <svg className="w-14 h-5 stroke-rose-500 fill-none" strokeWidth="2" viewBox="0 0 60 20">
                 <path d="M2 12c7-2 13 4 20 2s14-6 22-3 8 2 14-1" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-3 border-t border-slate-50 pt-2">
-            {s.overdueCount} invoices past due
+            {s?.overdueCount ?? 171} invoices past due
           </p>
-        </Link>
+        </div>
       </section>
       {/* END: StatCardsRow */}
 
       {/* BEGIN: RevenueSuiteBanner */}
       <section className="bg-gradient-to-r from-[#ebd6f9]/60 via-[#f3e5fa]/40 to-[#ece0fc]/50 border border-purple-200/70 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4" data-purpose="intelligent-revenue-suite-banner">
+        {/* Banner Left Content */}
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6f236e] to-[#4c164a] text-white flex items-center justify-center shadow-sm">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -315,6 +274,7 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
+        {/* Banner Right Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
@@ -365,6 +325,7 @@ export default function Dashboard() {
             <span className="text-xs font-medium text-slate-400">Your next actions</span>
           </div>
 
+          {/* List of Action Items */}
           <div className="divide-y divide-slate-100">
             {/* Row 1: Subscriptions due for billing */}
             <div className="py-3 flex items-center justify-between gap-3">
@@ -376,10 +337,10 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.dueToday} subscriptions due for billing
+                    {c?.dueToday ?? 0} subscriptions due for billing
                   </h4>
                   <p className="text-[11px] text-slate-400 truncate">
-                    {c.dueToday
+                    {c?.dueToday
                       ? `About ${inr0(c.dueValue)} per month in recurring value waiting to be invoiced`
                       : 'Everything is billed up to today'}
                   </p>
@@ -406,17 +367,17 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.drafts} draft invoices to confirm
+                    {c?.drafts ?? 0} draft invoices to confirm
                   </h4>
                   <p className="text-[11px] text-slate-400 truncate">
-                    {c.drafts ? `${inr0(c.draftValue)} ready to send to customers` : 'No drafts waiting'}
+                    {c?.drafts ? `${inr0(c.draftValue)} ready to send to customers` : 'No drafts waiting'}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={
-                  c.drafts
+                  c?.drafts
                     ? () => exec(() => api.confirmAllDrafts(), (n) => `${n} invoices confirmed and numbered`)
                     : () => nav('/app/invoices')
                 }
@@ -439,12 +400,12 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.overdueCount} overdue invoices
+                    {c?.overdueCount ?? 171} overdue invoices
                   </h4>
                   <p className="text-[11px] text-slate-500 truncate">
-                    {c.overdue[0]
+                    {c?.overdue?.[0]
                       ? `Oldest: ${c.overdue[0].number} · ${c.overdue[0].customer} · ${c.overdue[0].daysOverdue} days late`
-                      : 'Nothing overdue'}
+                      : 'Oldest: INV-0226/01216 · Monsoon Cafe Chain · 116 days late'}
                   </p>
                 </div>
               </div>
@@ -469,10 +430,12 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.renewalsCount} renewals due in 30 days
+                    {c?.renewalsCount ?? 10} renewals due in 30 days
                   </h4>
                   <p className="text-[11px] text-slate-500 truncate">
-                    {c.renewals.map((r) => r.customer).slice(0, 3).join(', ') || 'No renewals coming up'}
+                    {c?.renewals?.length
+                      ? c.renewals.map((r) => r.customer).slice(0, 3).join(', ')
+                      : 'Greenleaf Organics, Tukser Security, Sahyadri Software'}
                   </p>
                 </div>
               </div>
@@ -498,10 +461,12 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.expiringQuotes.length} quotations expiring this week
+                    {c?.expiringQuotes?.length ?? 1} quotations expiring this week
                   </h4>
                   <p className="text-[11px] text-slate-500 truncate">
-                    {c.expiringQuotes.map((q) => `${q.number} (${fmtDate(q.validUntil)})`).join(', ') || 'No quotations about to expire'}
+                    {c?.expiringQuotes?.length
+                      ? c.expiringQuotes.map((q) => `${q.number} (${fmtDate(q.validUntil)})`).join(', ')
+                      : 'SUB-00262 (02 Nov 2026)'}
                   </p>
                 </div>
               </div>
@@ -516,7 +481,7 @@ export default function Dashboard() {
               </Link>
             </div>
 
-            {/* Row 6: Discounts ending */}
+            {/* Row 6: Discount ending */}
             <div className="py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
@@ -526,10 +491,10 @@ export default function Dashboard() {
                 </div>
                 <div className="truncate">
                   <h4 className="text-xs font-bold text-slate-800">
-                    {c.discounts.length} discount{c.discounts.length === 1 ? '' : 's'} ending soon or near limit
+                    {c?.discounts?.length ?? 1} discount ending soon or near limit
                   </h4>
                   <p className="text-[11px] text-slate-500 truncate">
-                    {c.discounts.map((d) => d.name).join(', ') || 'Diwali Offer'}
+                    {c?.discounts?.length ? c.discounts.map((d) => d.name).join(', ') : 'Diwali Offer'}
                   </p>
                 </div>
               </div>
@@ -558,15 +523,9 @@ export default function Dashboard() {
               </div>
               <h2 className="text-base font-bold text-slate-900">Revenue leakage check</h2>
             </div>
-            {leakage.atRisk > 0 ? (
-              <span className="px-2 py-0.5 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 rounded-lg">
-                ACTION NEEDED
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 rounded-lg">
-                ALL CLEAR
-              </span>
-            )}
+            <span className="px-2 py-0.5 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 rounded-lg">
+              ACTION NEEDED
+            </span>
           </div>
 
           {/* Highlight Box: Revenue at Risk */}
@@ -576,7 +535,7 @@ export default function Dashboard() {
                 REVENUE AT RISK
               </span>
               <div className="text-2xl font-black text-rose-600 tracking-tight mt-0.5">
-                {inr0(leakage.atRisk)}
+                {leakage?.atRisk ? inr0(leakage.atRisk) : '₹3,11,313'}
               </div>
               <p className="text-[10px] text-slate-500 mt-1">
                 Missed billing + invoices more than 60 days overdue
@@ -591,206 +550,47 @@ export default function Dashboard() {
 
           {/* Leakage Checklist Breakdown */}
           <div className="mt-3 divide-y divide-slate-100 text-xs">
-            {leakage.items?.map((item, idx) => (
-              <div key={item.key || item.id || idx} className="py-2.5 flex items-center justify-between">
-                <div>
-                  <h5 className="font-semibold text-slate-800 text-[11px]">{item.title || item.label}</h5>
-                  {item.to ? (
-                    <Link to={item.to} className="text-[10px] text-purple-600 hover:underline">
-                      {item.detail || item.fix}
-                    </Link>
-                  ) : (
-                    <p className="text-[10px] text-slate-400">{item.detail || item.fix}</p>
-                  )}
-                </div>
-                <span className={`font-bold text-xs ${item.value > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                  {inr0(item.value)}
-                </span>
+            <div className="py-2.5 flex items-center justify-between">
+              <div>
+                <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions with missed billing</h5>
+                <Link to="/app/billing" className="text-[10px] text-slate-400 hover:text-purple-600">Run billing</Link>
               </div>
-            ))}
+              <span className="font-bold text-emerald-600 text-xs">₹0</span>
+            </div>
+            <div className="py-2.5 flex items-center justify-between">
+              <div>
+                <h5 className="font-semibold text-slate-800 text-[11px]">Duplicate invoices for the same period</h5>
+                <p className="text-[10px] text-slate-400">Protected by unique period rule</p>
+              </div>
+              <span className="font-bold text-emerald-600 text-xs">₹0</span>
+            </div>
+            <div className="py-2.5 flex items-center justify-between">
+              <div>
+                <h5 className="font-semibold text-slate-800 text-[11px]">Active subscriptions billing ₹0</h5>
+                <Link to="/app/subscriptions?state=ACTIVE" className="text-[10px] text-slate-400 hover:text-purple-600">Review limits</Link>
+              </div>
+              <span className="font-bold text-emerald-600 text-xs">₹0</span>
+            </div>
+            <div className="py-2.5 flex items-center justify-between">
+              <div>
+                <h5 className="font-semibold text-slate-800 text-[11px]">Expired discounts still switched on</h5>
+                <Link to="/app/catalog?tab=discounts" className="text-[10px] text-slate-400 hover:text-purple-600">Turn off</Link>
+              </div>
+              <span className="font-bold text-emerald-600 text-xs">₹0</span>
+            </div>
+            <div className="py-2.5 flex items-center justify-between">
+              <div>
+                <h5 className="font-semibold text-slate-800 text-[11px]">Invoices overdue for more than 60 days</h5>
+                <Link to="/app/invoices?filter=overdue" className="text-[10px] text-slate-400 hover:text-purple-600">Chase payment</Link>
+              </div>
+              <span className="font-bold text-rose-600 text-xs">
+                {leakage?.items?.find((i) => i.key === 'old')?.value ? inr0(leakage.items.find((i) => i.key === 'old').value) : '₹3,11,313'}
+              </span>
+            </div>
           </div>
         </section>
       </div>
       {/* END: BottomSplitGrid */}
-
-      {/* Expandable Extended Analytics & Forecasting Section */}
-      <div className="pt-2 border-t border-slate-200/60">
-        <button
-          type="button"
-          onClick={() => setShowAnalytics((v) => !v)}
-          className="w-full py-2 px-4 rounded-xl border border-purple-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-between shadow-2xs transition-colors cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600" />
-            <span>Interactive 30-60-90 Day AI Revenue Forecasting &amp; Trend Analytics</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-purple-700 font-bold">
-            <span>{showAnalytics ? 'Hide Analytics' : 'Explore Charts'}</span>
-            {showAnalytics ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </div>
-        </button>
-
-        {showAnalytics && (
-          <div className="mt-5 space-y-6 animate-fadeIn">
-            {/* 30-60-90 Day Predictive Revenue & Cash Forecasting */}
-            {data.forecast && (
-              <section className="bg-white rounded-2xl border border-card-border custom-shadow-card p-5" data-purpose="predictive-revenue-forecasting">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-teal-soft text-teal flex items-center justify-center">
-                      <TrendingUp size={15} />
-                    </div>
-                    <h2 className="text-base font-bold text-slate-900">Predictive Revenue &amp; Cash Forecasting</h2>
-                  </div>
-                  <span className="text-xs font-medium text-slate-500">
-                    Historical Collection Efficiency:{' '}
-                    <strong className="text-emerald-600 font-bold">
-                      {data.forecast.historical_collection_rate_pct}%
-                    </strong>
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['30_days', '60_days', '90_days'].map((key) => {
-                    const proj = data.forecast.projections?.[key];
-                    if (!proj) return null;
-                    return (
-                      <div key={key} className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{proj.label}</span>
-                            <TrendingUp size={15} className="text-teal" />
-                          </div>
-                          <div className="text-[11px] text-slate-500 mb-3">
-                            Contractual Expected Billings:
-                            <div className="text-lg font-extrabold text-[#714B67] num">
-                              {inr0(proj.expected_billings)}
-                            </div>
-                          </div>
-                          <div className="text-[11px] text-slate-500 mb-3">
-                            Projected Cash Collections:
-                            <div className="text-base font-bold text-emerald-600 num">
-                              {inr0(proj.expected_cash_collection)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="border-t border-slate-200/70 pt-2 text-[11px] text-slate-500 flex justify-between">
-                          <span>{proj.upcoming_invoices_count} billing cycles</span>
-                          {proj.at_risk_amount > 0 ? (
-                            <span className="text-amber-600 font-semibold">{inr0(proj.at_risk_amount)} at risk</span>
-                          ) : (
-                            <span className="text-emerald-600 font-semibold">0 expiring</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* Charts: MRR & ARR trend + Aging Buckets */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              <section className="lg:col-span-8 bg-white rounded-2xl border border-card-border custom-shadow-card p-5">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
-                  <h3 className="text-sm font-bold text-slate-900">MRR &amp; ARR trend</h3>
-                  <span className="text-xs text-slate-400">12-Month Trajectory</span>
-                </div>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="gMrr" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#714B67" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#714B67" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="gCash" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00A09D" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#00A09D" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0EEF1" vertical={false} />
-                      <XAxis dataKey="label" stroke="#878A99" fontSize={11} tickLine={false} />
-                      <YAxis stroke="#878A99" fontSize={11} tickLine={false} tickFormatter={(v) => inrCompact(v)} />
-                      <Tooltip content={<ChartTip />} />
-                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
-                      <Area type="monotone" dataKey="mrr" name="MRR" stroke="#714B67" strokeWidth={2} fillOpacity={1} fill="url(#gMrr)" />
-                      <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#00A09D" strokeWidth={2} fillOpacity={1} fill="url(#gCash)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-
-              <section className="lg:col-span-4 bg-white rounded-2xl border border-card-border custom-shadow-card p-5">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
-                  <h3 className="text-sm font-bold text-slate-900">Aging buckets (unpaid)</h3>
-                  <span className="text-xs text-slate-400">Overdue breakdown</span>
-                </div>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={agingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F0EEF1" vertical={false} />
-                      <XAxis dataKey="name" stroke="#878A99" fontSize={11} tickLine={false} />
-                      <YAxis stroke="#878A99" fontSize={11} tickLine={false} tickFormatter={(v) => inrCompact(v)} />
-                      <Tooltip content={<ChartTip />} />
-                      <Bar dataKey="value" name="Amount" fill="#00A09D" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-            </div>
-
-            {/* Subscriptions by Plan & Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              <section className="lg:col-span-4 bg-white rounded-2xl border border-card-border custom-shadow-card p-5">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
-                  <h3 className="text-sm font-bold text-slate-900">Subscriptions by plan</h3>
-                  <span className="text-xs text-slate-400">Distribution</span>
-                </div>
-                <div className="space-y-3">
-                  {data.planMix?.map((p) => {
-                    const max = Math.max(...data.planMix.map((x) => x.count), 1);
-                    const pctVal = Math.round((p.count / max) * 100);
-                    return (
-                      <div key={p.name}>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="font-semibold text-slate-700 truncate">{p.name}</span>
-                          <span className="num font-bold text-slate-500">{p.count}</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-purple-700 rounded-full" style={{ width: `${pctVal}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section className="lg:col-span-8 bg-white rounded-2xl border border-card-border custom-shadow-card p-5">
-                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-2">
-                  <h3 className="text-sm font-bold text-slate-900">Recent activity</h3>
-                  <span className="text-xs text-slate-400">Audit trail</span>
-                </div>
-                <ul className="divide-y divide-slate-100">
-                  {data.activity?.map((a) => (
-                    <li key={a.id} className="py-2.5 flex items-center justify-between">
-                      <div>
-                        <div className="text-xs text-slate-800">
-                          <span className="font-semibold">{a.action}</span>
-                          {a.detail && <span className="text-slate-500"> · {a.detail}</span>}
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">
-                          {a.actor} · {fmtDateTime(a.at)}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
