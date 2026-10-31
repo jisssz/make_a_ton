@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import {
   Repeat, TrendingUp, Wallet, Receipt, AlertTriangle, Zap, CalendarClock, FileText, Tag, ArrowRight, Timer, ShieldCheck,
+  Sparkles, Clock, Smartphone,
 } from 'lucide-react';
 import { PageHeader, Kpi, Card, Loading, Badge } from '../../components/ui';
 import { api } from '../../data/api';
@@ -98,6 +99,48 @@ export default function Dashboard() {
         <Kpi label="Overdue" value={inrCompact(s.overdue)} hint={`${s.overdueCount} invoices past due`} icon={AlertTriangle} tone="red" to="/app/invoices?filter=overdue" />
       </div>
 
+      {/* SubSync Intelligent Innovation Bar */}
+      <div className="bg-gradient-to-r from-plum-subtle via-white to-teal-soft/40 border border-line rounded-xl p-3.5 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-plum text-white flex items-center justify-center shrink-0">
+            <Sparkles size={18} className="text-gold animate-pulse" />
+          </div>
+          <div>
+            <div className="text-[13px] font-semibold text-charcoal flex items-center gap-2">
+              SubSync Intelligent Revenue Suite
+              <span className="text-[10px] font-bold uppercase bg-plum text-white px-1.5 py-0.2 rounded">Odoo x Make-A-Ton</span>
+            </div>
+            <div className="text-[12px] text-muted">AI Churn Mitigation · Time-Travel Sandbox · Dynamic Bharat UPI QR</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', ctrlKey: true }))}
+            className="btn-secondary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-white text-plum border-plum/30 hover:border-plum"
+            title="Open SubSync AI Revenue Intelligence Copilot"
+          >
+            <Sparkles size={13} className="text-plum" />
+            <span>Open AI Copilot</span>
+          </button>
+          <Link
+            to="/app/customers?healthFilter=at_risk"
+            className="btn-secondary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-white text-bad border-bad/30 hover:bg-bad-bg"
+            title="Inspect customers at risk of churn"
+          >
+            <ShieldCheck size={13} className="text-bad" />
+            <span>Churn Matrix</span>
+          </Link>
+          <Link
+            to="/app/billing"
+            className="btn-secondary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-white text-charcoal hover:bg-canvas"
+            title="Launch Billing Run & Time Travel"
+          >
+            <Clock size={13} className="text-gold" />
+            <span>Time Machine</span>
+          </Link>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
         <Card title="Billing Control Centre" className="lg:col-span-2" pad={false}
           action={<span className="text-[12px] text-muted">Your next actions</span>}>
@@ -118,18 +161,16 @@ export default function Dashboard() {
           </div>
           <ul>
             {leakage.items.map((i) => (
-              <li key={i.key} className="flex items-center gap-3 px-4 py-2.5 border-b border-line last:border-0 text-[13px]">
-                {i.count ? <AlertTriangle size={15} className="text-warn shrink-0" /> : <ShieldCheck size={15} className="text-ok shrink-0" />}
-                <span className="flex-1">{i.label}</span>
-                <span className={`num font-semibold ${i.count ? 'text-bad' : 'text-ok'}`}>{i.count}</span>
-                {i.count > 0 && i.to && <Link to={i.to} className="text-plum" aria-label={i.fix}><ArrowRight size={15} /></Link>}
+              <li key={i.id} className="px-4 py-2.5 border-b border-line last:border-0 flex items-center justify-between text-[13px]">
+                <div><div className="font-medium">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></div>
+                <div className="num text-bad font-medium">{inr0(i.value)}</div>
               </li>
             ))}
           </ul>
         </Card>
       </div>
 
-      {/* 30-60-90 Day Predictive Revenue Forecasting */}
+{/* 30-60-90 Day Predictive Revenue Forecasting */}
       {data.forecast && (
         <Card
           title="Predictive Revenue & Cash Forecasting"
@@ -182,32 +223,37 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <Card title="MRR trend" action={<span className="text-[12px] text-muted">Last 12 months</span>}>
+
+      <div className="grid lg:grid-cols-3 gap-4 mb-4">
+        <Card title="MRR & ARR trend" className="lg:col-span-2">
           <div className="h-64">
-            <ResponsiveContainer>
-              <AreaChart data={chart} margin={{ left: 8, right: 8, top: 8 }}>
-                <defs><linearGradient id="mrr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#714B67" stopOpacity={0.25} /><stop offset="100%" stopColor="#714B67" stopOpacity={0} /></linearGradient></defs>
-                <CartesianGrid stroke="#E8E8EC" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#747783' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={inrCompact} tick={{ fontSize: 11, fill: '#747783' }} axisLine={false} tickLine={false} width={64} />
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gMrr" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#714B67" stopOpacity={0.3} /><stop offset="95%" stopColor="#714B67" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gCash" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00A09D" stopOpacity={0.25} /><stop offset="95%" stopColor="#00A09D" stopOpacity={0} /></linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EEF1" vertical={false} />
+                <XAxis dataKey="label" stroke="#878A99" fontSize={11} tickLine={false} />
+                <YAxis stroke="#878A99" fontSize={11} tickLine={false} tickFormatter={(v) => inrCompact(v)} />
                 <Tooltip content={<ChartTip />} />
-                <Area type="monotone" dataKey="mrr" name="MRR" stroke="#714B67" strokeWidth={2} fill="url(#mrr)" />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
+                <Area type="monotone" dataKey="mrr" name="MRR" stroke="#714B67" strokeWidth={2} fillOpacity={1} fill="url(#gMrr)" />
+                <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#00A09D" strokeWidth={2} fillOpacity={1} fill="url(#gCash)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card title="Billed vs collected" action={<span className="text-[12px] text-muted">Invoiced value vs cash received</span>}>
+
+        <Card title="Aging buckets (unpaid)">
           <div className="h-64">
-            <ResponsiveContainer>
-              <BarChart data={chart} margin={{ left: 8, right: 8, top: 8 }} barGap={2}>
-                <CartesianGrid stroke="#E8E8EC" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#747783' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={inrCompact} tick={{ fontSize: 11, fill: '#747783' }} axisLine={false} tickLine={false} width={64} />
-                <Tooltip content={<ChartTip />} cursor={{ fill: '#F7F7F8' }} />
-                <Legend iconType="square" iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="billed" name="Billed" fill="#714B67" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="collected" name="Collected" fill="#008784" radius={[3, 3, 0, 0]} />
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={agingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EEF1" vertical={false} />
+                <XAxis dataKey="name" stroke="#878A99" fontSize={11} tickLine={false} />
+                <YAxis stroke="#878A99" fontSize={11} tickLine={false} tickFormatter={(v) => inrCompact(v)} />
+                <Tooltip content={<ChartTip />} />
+                <Bar dataKey="value" name="Amount" fill="#00A09D" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -215,32 +261,27 @@ export default function Dashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card title="Receivables aging" action={<Link to="/app/invoices?filter=overdue" className="btn-link">View overdue</Link>}>
-          <div className="h-52">
-            <ResponsiveContainer>
-              <BarChart data={agingData} layout="vertical" margin={{ left: 0, right: 16 }}>
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#747783' }} axisLine={false} tickLine={false} width={64} />
-                <Tooltip formatter={(v) => inr(v)} cursor={{ fill: '#F7F7F8' }} />
-                <Bar dataKey="value" name="Outstanding" fill="#D69A35" radius={[0, 3, 3, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <Card title="Subscriptions by plan">
+          <div className="space-y-2.5">
+            {data.planMix.map((p) => {
+              const max = Math.max(...data.planMix.map((x) => x.count), 1);
+              const pctVal = Math.round((p.count / max) * 100);
+              return (
+                <div key={p.name}>
+                  <div className="flex justify-between text-[13px] mb-1">
+                    <span className="font-medium truncate">{p.name}</span>
+                    <span className="num text-muted">{p.count}</span>
+                  </div>
+                  <div className="h-2 bg-canvas rounded overflow-hidden">
+                    <div className="h-full bg-plum rounded" style={{ width: `${pctVal}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
-        <Card title="Overdue — oldest first" pad={false} action={<Link to="/app/invoices?filter=overdue" className="btn-link">All</Link>}>
-          <table className="tbl">
-            <tbody>
-              {c.overdue.map((i) => (
-                <tr key={i.id} className="cursor-pointer" onClick={() => nav(`/app/invoices/${i.id}`)}>
-                  <td><div className="font-medium">{i.customer}</div><div className="text-[12px] text-muted">{i.number}</div></td>
-                  <td className="r"><div className="num font-medium">{inr0(i.balance)}</div><div className="text-[12px] text-bad">{i.daysOverdue} days</div></td>
-                </tr>
-              ))}
-              {!c.overdue.length && <tr><td className="text-muted text-center py-8">Nothing overdue 🎉</td></tr>}
-            </tbody>
-          </table>
-        </Card>
-        <Card title="Recent activity" pad={false}>
+
+        <Card title="Recent activity" pad={false} className="lg:col-span-2">
           <ul>
             {data.activity.map((a) => (
               <li key={a.id} className="px-4 py-2.5 border-b border-line last:border-0">

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Check, Send, Printer, CreditCard, XCircle } from 'lucide-react';
+import { Check, Send, Printer, CreditCard, XCircle, Sparkles, Smartphone, Share2 } from 'lucide-react';
 import { PageHeader, Card, Loading, Status, Empty, Modal, Logo } from '../../components/ui';
 import { RecordPaymentModal } from '../../components/shared';
+import { UpiPaymentModal } from '../../components/UpiPaymentModal';
 import { TaxBox } from './SubscriptionDetail';
 import { api } from '../../data/api';
 import { useQuery, useAction } from '../../lib/hooks';
@@ -10,15 +11,21 @@ import { inr, fmtDate } from '../../lib/format';
 
 export default function InvoiceDetail({ portal }) {
   const { id } = useParams();
-  const { data, error } = useQuery(() => api.invoice(id), [id]);
+  const { data, error, refetch } = useQuery(() => api.invoice(id), [id]);
   const { exec, busy } = useAction();
   const [paying, setPaying] = useState(false);
+  const [upiOpen, setUpiOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   if (error) return <Empty title="Invoice not found" action={<Link to={portal ? '/portal/invoices' : '/app/invoices'} className="btn-secondary">Back</Link>} />;
   if (!data) return <Loading rows={10} />;
   const { invoice: inv, customer, company, subscription, payments } = data;
   const open = ['CONFIRMED', 'PARTIAL'].includes(inv.state);
   const title = inv.number || `Draft invoice #${inv.id}`;
+
+  const shareWhatsapp = () => {
+    const text = `Hello ${customer.name}, gentle reminder for Brightloop Software invoice ${inv.number} of ${inr(inv.balance)} due on ${fmtDate(inv.dueDate)}.\n\nPay securely via UPI: upi://pay?pa=brightloop@okaxis&am=${(inv.balance / 100).toFixed(2)}&cu=INR&tn=Invoice%20${inv.number}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   return (
     <>
@@ -27,9 +34,20 @@ export default function InvoiceDetail({ portal }) {
           subtitle={`${customer.name} · ${fmtDate(inv.periodStart)} – ${fmtDate(inv.periodEnd)}`}
           crumbs={portal ? [{ label: 'Invoices', to: '/portal/invoices' }, { label: title }] : [{ label: 'Invoices', to: '/app/invoices' }, { label: title }]}
           actions={<>
+            {open && (
+              <button className="btn-teal flex items-center gap-1.5 shadow-sm" onClick={() => setUpiOpen(true)}>
+                <Sparkles size={14} className="text-gold animate-pulse" />
+                <span>{portal ? 'Pay via UPI' : 'Instant UPI / QR'}</span>
+              </button>
+            )}
             {!portal && inv.state === 'DRAFT' && <button className="btn-primary" disabled={busy} onClick={() => exec(() => api.confirmInvoices([inv.id]), 'Invoice confirmed and numbered')}><Check size={14} />Confirm</button>}
             {!portal && ['DRAFT', 'CONFIRMED', 'PARTIAL'].includes(inv.state) && <button className="btn-secondary" disabled={busy} onClick={() => exec(() => api.sendInvoice(inv.id), (to) => `Invoice emailed to ${to}`)}><Send size={14} />Send</button>}
-            {!portal && open && <button className="btn-teal" onClick={() => setPaying(true)}><CreditCard size={14} />Record payment</button>}
+            {!portal && open && <button className="btn-secondary" onClick={() => setPaying(true)}><CreditCard size={14} />Record manual payment</button>}
+            {open && !portal && (
+              <button className="btn-secondary" onClick={shareWhatsapp} title="Send WhatsApp payment reminder">
+                <Share2 size={14} className="text-[#25D366]" /> WhatsApp
+              </button>
+            )}
             <button className="btn-secondary" onClick={() => window.print()}><Printer size={14} />Print / PDF</button>
             {!portal && ['DRAFT', 'CONFIRMED'].includes(inv.state) && inv.amountPaid === 0 && <button className="btn-danger" onClick={() => setCancelling(true)}><XCircle size={14} />Cancel</button>}
           </>} />
@@ -98,12 +116,36 @@ export default function InvoiceDetail({ portal }) {
               </>}
             </div>
           </div>
-          <footer className="mt-8 pt-4 border-t border-line text-[12px] text-muted">
-            Pay by UPI or bank transfer quoting {inv.number || 'the invoice number'}. Thank you for your business.
+          <footer className="mt-8 pt-4 border-t border-line text-[12px] text-muted flex items-center justify-between">
+            <div>Pay by UPI (brightloop@okaxis) or bank transfer quoting {inv.number || 'the invoice number'}.</div>
+            <div className="font-semibold text-plum">SubSync Automated Billing Engine</div>
           </footer>
         </article>
 
         <div className="space-y-4 no-print">
+          {/* UPI Instant Settlement Banner */}
+          {open && (
+            <div className="bg-gradient-to-br from-[#1E4620] to-[#0E2912] text-white rounded-xl p-4 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] uppercase tracking-wider font-bold text-green-300 flex items-center gap-1">
+                  <Smartphone size={13} /> Instant Bharat UPI
+                </span>
+                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">0% Merchant Fee</span>
+              </div>
+              <div>
+                <div className="text-[12px] text-green-100">Scan QR or Pay Instantly</div>
+                <div className="text-[20px] font-bold text-white num mt-0.5">{inr(inv.balance)}</div>
+              </div>
+              <button
+                onClick={() => setUpiOpen(true)}
+                className="w-full bg-white text-[#1E4620] hover:bg-green-50 font-semibold py-2 px-3 rounded-lg text-[13px] flex items-center justify-center gap-2 shadow-xs transition-colors"
+              >
+                <Sparkles size={14} className="text-[#1E4620]" />
+                <span>{portal ? 'Pay with UPI Now' : 'Open UPI Terminal / QR'}</span>
+              </button>
+            </div>
+          )}
+
           <Card title="Payment status">
             <div className="space-y-2 text-[13px]">
               <div className="flex justify-between"><span className="text-muted">Total</span><span className="num">{inr(inv.total)}</span></div>
@@ -118,7 +160,7 @@ export default function InvoiceDetail({ portal }) {
             {payments.length === 0 ? <div className="p-4 text-[13px] text-muted">No payments recorded yet.</div> : (
               <ul>{payments.map((p) => (
                 <li key={p.id} className="px-4 py-2.5 border-b border-line last:border-0 flex justify-between text-[13px]">
-                  <div><div className="font-medium">{p.method}</div><div className="text-[12px] text-muted">{fmtDate(p.paidOn)}{p.note && ` · ${p.note}`}</div></div>
+                  <div><div className="font-medium flex items-center gap-1.5">{p.method}{p.method === 'UPI' && <span className="text-[10px] bg-ok-bg text-ok px-1 rounded font-bold">VERIFIED</span>}</div><div className="text-[12px] text-muted">{fmtDate(p.paidOn)}{p.note && ` · ${p.note}`}</div></div>
                   <div className="num font-medium">{inr(p.amount)}</div>
                 </li>
               ))}</ul>
@@ -127,7 +169,17 @@ export default function InvoiceDetail({ portal }) {
         </div>
       </div>
 
+      {/* Payment Modals */}
       {paying && <RecordPaymentModal invoice={inv} onClose={() => setPaying(false)} />}
+      <UpiPaymentModal
+        open={upiOpen}
+        onClose={() => setUpiOpen(false)}
+        invoice={inv}
+        customer={customer}
+        onSettled={() => {
+          if (refetch) refetch();
+        }}
+      />
       {cancelling && (
         <Modal open onClose={() => setCancelling(false)} title="Cancel this invoice?"
           footer={<><button className="btn-secondary" onClick={() => setCancelling(false)}>Keep it</button><button className="btn-primary bg-bad hover:bg-bad" onClick={async () => { await exec(() => api.cancelInvoice(inv.id), 'Invoice cancelled'); setCancelling(false); }}>Cancel invoice</button></>}>

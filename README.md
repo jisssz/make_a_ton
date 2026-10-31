@@ -68,6 +68,28 @@ SubSync is one platform that runs the whole life of a subscription business: pro
 
 ---
 
+## 🚀 Standout Innovations & "Wow Factor" Features
+
+1. **SubSync AI Revenue Intelligence Copilot (`Ctrl+J`)**:
+   - Continuous silent revenue leakage radar, silent churn detection, and 1-click remediation actions.
+   - Built-in predictive cash forecasting modeling 30-day and 60-day collections based on scheduled renewals and payment velocity.
+   - Natural language billing copilot capable of parsing live subscription ledgers to answer complex queries (e.g., *"Top 5 overdue accounts"*, *"Odoo brand variant margin contribution"*, *"Expiring subscriptions"*).
+
+2. **Instant Bharat UPI Dynamic QR & Payment Terminal**:
+   - Zero-dependency client-side vector SVG QR generator (`frontend/src/lib/qr.js`) generating standard NPCI UPI deep links (`upi://pay?pa=brightloop@okaxis&...`).
+   - One-click instant UPI settlement simulator supporting GPay, PhonePe, Paytm, BHIM, and CRED with automated webhook reconciliation and instant receipt issuance.
+   - 1-click WhatsApp payment reminders with pre-formatted UPI payment links for immediate collection.
+
+3. **Interactive Time Travel Sandbox (Live Billing Engine Simulator)**:
+   - Visual time-machine slider and preset jump buttons (`+7d`, `+30d`, `+60d`, `+90d`) with real-time projections of due subscriptions, gross invoice volume, and expiring quotations.
+   - 1-Click "Fast-Forward & Run Automated Billing Day" executing batch billing cycles into the future without touching a spreadsheet.
+
+4. **Algorithmic Customer Health & Churn Risk Matrix (0–100%)**:
+   - Multi-factor algorithmic health score evaluating payment promptness, contract stability, active vs paused subscriptions, and GSTIN business maturity.
+   - Automatic classification into Healthy (≥80%), Stable, and At Churn Risk (<60%) with personalized AI retention action plans.
+
+---
+
 ## Tech stack
 
 | Layer | Technology |

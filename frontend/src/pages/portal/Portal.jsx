@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Repeat, Receipt } from 'lucide-react';
+import { Repeat, Receipt, Sparkles } from 'lucide-react';
 import { PageHeader, Loading, Status, Empty, Kpi, Pagination, Tabs } from '../../components/ui';
 import { InvoiceTable, useUrlState } from '../../components/shared';
+import { UpiPaymentModal } from '../../components/UpiPaymentModal';
 import { api } from '../../data/api';
 import { useQuery, useAuth } from '../../lib/hooks';
 import { inr, fmtDate } from '../../lib/format';
@@ -10,7 +12,8 @@ import { periodLabel } from '../../lib/dates';
 export function PortalHome() {
   const { user } = useAuth();
   const nav = useNavigate();
-  const { data } = useQuery(async () => {
+  const [upiInvoice, setUpiInvoice] = useState(null);
+  const { data, refetch } = useQuery(async () => {
     const [subs, inv] = await Promise.all([api.subscriptions({}), api.invoices({ filter: 'unpaid' })]);
     return { subs: subs.rows, unpaid: inv.rows };
   }, []);
@@ -46,23 +49,76 @@ export function PortalHome() {
       )}
       {data.unpaid.length > 0 && (
         <>
-          <h2 className="micro mt-8 mb-2">Unpaid invoices</h2>
-          <div className="card"><InvoiceTable rows={data.unpaid} base="/portal/invoices" showCustomer={false} /></div>
+          <div className="flex items-center justify-between mt-8 mb-2">
+            <h2 className="micro">Unpaid invoices</h2>
+            <span className="text-[11px] text-ok font-medium flex items-center gap-1">
+              <Sparkles size={12} /> Instant UPI payment enabled
+            </span>
+          </div>
+          <div className="card">
+            <InvoiceTable
+              rows={data.unpaid}
+              base="/portal/invoices"
+              showCustomer={false}
+              onPay={(inv) => setUpiInvoice(inv)}
+              payLabel="⚡ Pay via UPI"
+              payTone="teal"
+            />
+          </div>
         </>
+      )}
+
+      {upiInvoice && (
+        <UpiPaymentModal
+          open
+          invoice={upiInvoice}
+          customer={{ name: user.name }}
+          onClose={() => setUpiInvoice(null)}
+          onSettled={() => {
+            if (refetch) refetch();
+          }}
+        />
       )}
     </>
   );
 }
 
 export function PortalInvoices() {
+  const { user } = useAuth();
   const [st, set] = useUrlState({ filter: '' });
-  const { data } = useQuery(() => api.invoices(st), [st.filter, st.page]);
+  const [upiInvoice, setUpiInvoice] = useState(null);
+  const { data, refetch } = useQuery(() => api.invoices(st), [st.filter, st.page]);
   return (
     <>
-      <PageHeader title="Invoices" subtitle="Download or print any invoice. Payments are matched by Brightloop’s team." />
+      <PageHeader title="Invoices" subtitle="Download or print any invoice, or settle instantly with Bharat UPI." />
       <Tabs value={st.filter} onChange={(filter) => set({ filter })} tabs={[{ value: '', label: 'All' }, { value: 'unpaid', label: 'Unpaid' }, { value: 'overdue', label: 'Overdue' }, { value: 'PAID', label: 'Paid' }]} />
-      <div className="card">{!data ? <div className="p-4"><Loading /></div> : <InvoiceTable rows={data.rows} base="/portal/invoices" showCustomer={false} />}</div>
+      <div className="card">
+        {!data ? (
+          <div className="p-4"><Loading /></div>
+        ) : (
+          <InvoiceTable
+            rows={data.rows}
+            base="/portal/invoices"
+            showCustomer={false}
+            onPay={(inv) => setUpiInvoice(inv)}
+            payLabel="⚡ Pay via UPI"
+            payTone="teal"
+          />
+        )}
+      </div>
       {data && <Pagination page={data.page} size={data.size} total={data.total} onPage={(page) => set({ page })} />}
+
+      {upiInvoice && (
+        <UpiPaymentModal
+          open
+          invoice={upiInvoice}
+          customer={{ name: user?.name }}
+          onClose={() => setUpiInvoice(null)}
+          onSettled={() => {
+            if (refetch) refetch();
+          }}
+        />
+      )}
     </>
   );
 }

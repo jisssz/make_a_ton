@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Repeat, FileText, Receipt, CreditCard, Package, UserPlus, Settings, Search,
-  LogOut, Menu, Zap, Calendar,
+  LogOut, Menu, Zap, Calendar, Sparkles, Clock,
 } from 'lucide-react';
 import { Logo, Badge } from './ui';
 import { useAuth } from '../lib/hooks';
 import { api, isDemoMode } from '../data/api';
 import { fmtDate, initials } from '../lib/format';
 import { useQuery } from '../lib/hooks';
+import { AICopilot } from './AICopilot';
+import { TimeTravelModal } from './TimeTravelModal';
 
 const NAV = [
   { group: 'Operations', items: [
@@ -90,13 +92,21 @@ function UserMenu({ user, onLogout }) {
   );
 }
 
-function ClockChip() {
+function ClockChip({ onOpenTimeTravel }) {
   const { data } = useQuery(() => api.billingRuns(), []);
   if (!isDemoMode || !data) return null;
   return (
-    <Link to="/app/billing" className={`hidden lg:flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded border ${data.clock ? 'border-gold bg-[#FFF6E0] text-[#7a5200]' : 'border-line text-muted'}`} title="Billing date used by the demo">
-      <Calendar size={13} /> {data.clock ? 'Simulated date' : 'Today'}: <span className="num font-medium">{fmtDate(data.today)}</span>
-    </Link>
+    <button
+      type="button"
+      onClick={onOpenTimeTravel}
+      className={`hidden lg:flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded border transition-colors ${
+        data.clock ? 'border-gold bg-[#FFF6E0] text-[#7a5200] font-medium' : 'border-line text-muted hover:text-charcoal hover:bg-canvas'
+      }`}
+      title="Click to launch Time Travel Sandbox & Billing Engine"
+    >
+      <Calendar size={13} /> {data.clock ? 'Simulated' : 'Today'}: <span className="num font-medium">{fmtDate(data.today)}</span>
+      <span className="text-[10px] bg-white/80 px-1 py-0.2 rounded border border-line">⏱️ Time Travel</span>
+    </button>
   );
 }
 
@@ -104,7 +114,21 @@ export default function AppShell() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [mobile, setMobile] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [timeTravelOpen, setTimeTravelOpen] = useState(false);
   const isAdmin = user?.role === 'ADMIN';
+
+  // Global keyboard shortcut Ctrl+J for AI Copilot
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setCopilotOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const sidebar = (
     <aside className="w-[250px] h-full bg-white border-r border-line flex flex-col">
@@ -143,13 +167,26 @@ export default function AppShell() {
           <button className="lg:hidden text-muted" onClick={() => setMobile(true)} aria-label="Open menu"><Menu size={20} /></button>
           <GlobalSearch />
           <div className="flex-1" />
-          <ClockChip />
+          <button
+            onClick={() => setCopilotOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium bg-plum-subtle text-plum border border-plum/30 hover:bg-plum hover:text-white transition-all shadow-xs"
+            title="SubSync AI Revenue Intelligence (Ctrl+J)"
+          >
+            <Sparkles size={13} className="text-gold animate-pulse" />
+            <span className="font-semibold">AI Copilot</span>
+            <kbd className="hidden lg:inline text-[10px] bg-white text-charcoal border border-line rounded px-1 ml-0.5">Ctrl J</kbd>
+          </button>
+          <ClockChip onOpenTimeTravel={() => setTimeTravelOpen(true)} />
           <UserMenu user={user} onLogout={() => { logout(); nav('/login'); }} />
         </header>
         <main className="p-4 sm:p-6 max-w-[1400px] mx-auto">
           <Outlet />
         </main>
       </div>
+
+      {/* AI Copilot & Time Travel Modals */}
+      <AICopilot open={copilotOpen} onClose={() => setCopilotOpen(false)} />
+      <TimeTravelModal open={timeTravelOpen} onClose={() => setTimeTravelOpen(false)} />
     </div>
   );
 }

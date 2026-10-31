@@ -52,7 +52,7 @@ export function SubscriptionTable({ rows, base = '/app/subscriptions', showCusto
   );
 }
 
-export function InvoiceTable({ rows, base = '/app/invoices', showCustomer = true, selectable, selected, onSelect, onPay }) {
+export function InvoiceTable({ rows, base = '/app/invoices', showCustomer = true, selectable, selected, onSelect, onPay, payLabel = 'Record payment', payTone }) {
   const nav = useNavigate();
   if (!rows.length) return <Empty icon={Receipt} title="No invoices found" text="Invoices appear here after a billing run." />;
   const drafts = rows.filter((r) => r.state === 'DRAFT');
@@ -74,7 +74,7 @@ export function InvoiceTable({ rows, base = '/app/invoices', showCustomer = true
               <td className="r num">{inr(i.total)}</td>
               <td className="r num font-medium">{['CONFIRMED', 'PARTIAL'].includes(i.state) ? inr(i.balance) : '—'}</td>
               <td><Status value={i.state} overdue={i.overdue} /></td>
-              {onPay && <td onClick={(e) => e.stopPropagation()}>{['CONFIRMED', 'PARTIAL'].includes(i.state) && <button className="btn-secondary btn-sm" onClick={() => onPay(i)}>Record payment</button>}</td>}
+              {onPay && <td onClick={(e) => e.stopPropagation()}>{['CONFIRMED', 'PARTIAL'].includes(i.state) && <button className={payTone === 'teal' ? "btn-teal btn-sm" : "btn-secondary btn-sm"} onClick={() => onPay(i)}>{payLabel}</button>}</td>}
             </tr>
           ))}
         </tbody>
@@ -98,23 +98,25 @@ export function RecordPaymentModal({ invoice, onClose }) {
       footer={<><button className="btn-secondary" onClick={onClose}>Cancel</button><button className="btn-primary" form="payform" disabled={busy}>Save payment</button></>}>
       <form id="payform" onSubmit={submit} className="space-y-4" noValidate>
         <div className="grid grid-cols-2 gap-3 bg-canvas rounded p-3 text-[13px]">
-          <div><div className="micro">Customer</div>{invoice.customer}</div>
-          <div><div className="micro">Balance due</div><span className="num font-semibold">{inr(invoice.balance)}</span></div>
+          <div><div className="text-muted">Total</div><div className="font-medium num">{inr(invoice.total)}</div></div>
+          <div><div className="text-muted">Balance due</div><div className="font-semibold text-warn num">{inr(invoice.balance)}</div></div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Method" error={fieldErrors.method} required>
+          <Field label="Payment method">
             <select className="input" value={f.method} onChange={(e) => setF({ ...f, method: e.target.value })}>
-              {['UPI', 'BANK', 'CARD', 'CASH'].map((m) => <option key={m} value={m}>{m === 'BANK' ? 'Bank transfer' : m}</option>)}
+              {['UPI', 'Bank transfer', 'Credit card', 'Debit card', 'Cheque', 'Cash'].map((m) => <option key={m}>{m}</option>)}
             </select>
           </Field>
-          <Field label="Amount (₹)" error={fieldErrors.amount} hint="Partial payments are allowed" required>
-            <input type="number" min="0" step="0.01" className={`input num ${fieldErrors.amount ? 'input-error' : ''}`} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
+          <Field label="Amount (₹)" error={fieldErrors?.amount}>
+            <input type="number" step="0.01" className="input num" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} required />
+          </Field>
+          <Field label="Payment date">
+            <input type="date" className="input" value={f.paidOn} onChange={(e) => setF({ ...f, paidOn: e.target.value })} />
+          </Field>
+          <Field label="Reference / note">
+            <input className="input" placeholder="e.g. UPI ref or bank UTR" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
           </Field>
         </div>
-        <Field label="Payment date" error={fieldErrors.paidOn} required>
-          <input type="date" className={`input ${fieldErrors.paidOn ? 'input-error' : ''}`} value={f.paidOn} max={todayIST()} onChange={(e) => setF({ ...f, paidOn: e.target.value })} />
-        </Field>
-        <Field label="Note"><input className="input" placeholder="UTR / cheque no. / remarks" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></Field>
       </form>
     </Modal>
   );
