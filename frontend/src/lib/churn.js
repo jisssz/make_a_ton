@@ -85,3 +85,4 @@ export function calculateCustomerHealth(customer, invoices = [], subscriptions =
     },
   };
 }
+

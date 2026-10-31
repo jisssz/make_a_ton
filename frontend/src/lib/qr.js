@@ -309,3 +309,4 @@ export function generateQRCodeSVG(text, size = 180) {
     matrix,
   };
 }
+
