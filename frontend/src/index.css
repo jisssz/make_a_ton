@@ -35,6 +35,34 @@
   .micro { @apply text-label uppercase text-muted; }
 }
 
+/* Slanted 3D Dashboard Mockup Card */
+.dashboard-perspective-container {
+  perspective: 1200px;
+}
+
+.mockup-3d-card {
+  transform: rotateY(-7deg) rotateX(7deg) rotateZ(-1.5deg);
+  box-shadow: 
+    0 25px 50px -12px rgba(18, 4, 30, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.mockup-3d-card:hover {
+  transform: rotateY(-3deg) rotateX(4deg) rotateZ(-0.5deg);
+}
+
+/* Highlight yellow marker badge */
+.yellow-highlight {
+  background-color: #FACC15;
+  color: #1E1B4B;
+  border-radius: 12px;
+  padding: 2px 18px 6px;
+  display: inline-block;
+  line-height: 1.15;
+}
+
 /* Landing page marker effects (from reference design) */
 .hl-yellow, .hl-coral { position: relative; display: inline-block; white-space: nowrap; z-index: 1; }
 .hl-yellow::before { content: ''; position: absolute; left: -8px; right: -8px; top: 15%; bottom: 5%; background: #FDBA2F; border-radius: 8px 18px 12px 14px; transform: rotate(-1.2deg); z-index: -1; }
